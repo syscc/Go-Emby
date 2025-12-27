@@ -25,7 +25,7 @@
   - **独立进程隔离**：每个媒体服务器配置保存后，会生成独立的配置文件（`/app/servers/<Name>/config.yml`）并以独立的子进程运行核心内核，互不干扰。
   - **即时生效**：在 WebUI 中激活/修改媒体服务器后，会自动重启相应的子进程。
 
-- **日志查看与过滤**
+- **日志查看与过滤**git status
   - 支持在 WebUI 中实时查看系统日志。
   - 支持按服务器筛选日志，并提供多种过滤类别（播放、错误、直链、重定向、字幕等）。
 
@@ -162,14 +162,9 @@ docker-compose up -d
 
 ## ☕️ 请我喝杯咖啡
 
-<img height="300px" src="./assets/2024-11-05-09-57-45.jpg"></img>
+<img height="300px" src="./assets/pay.jpg"></img>
 
 ## 🌟 Star History
 
-<a href="https://star-history.com/#syscc/Go-Emby&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=syscc/Go-Emby&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=syscc/Go-Emby&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=syscc/Go-Emby&type=Date" />
- </picture>
-</a>
+[![Stargazers over time](https://starchart.cc/syscc/Go-Emby.svg?variant=adaptive)](https://starchart.cc/syscc/Go-Emby)
+
