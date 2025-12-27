@@ -30,7 +30,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w -X 
 FROM alpine:latest
 
 # 设置时区
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata ca-certificates
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -38,7 +38,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 WORKDIR /app
 
 # 从构建阶段复制编译后的二进制文件
-COPY --from=builder /app/main .
+COPY --from=builder /app/main /app/main
 
 # 暴露端口
 EXPOSE 8095
@@ -46,4 +46,4 @@ EXPOSE 8094
 EXPOSE 8090
 
 # 运行应用程序
-CMD ["./main"]
+CMD ["/app/main"]
