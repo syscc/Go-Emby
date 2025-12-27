@@ -1,5 +1,9 @@
 # 第一阶段：构建阶段
-FROM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+
+# 声明构建参数
+ARG TARGETOS
+ARG TARGETARCH
 
 # 设置工作目录
 WORKDIR /app
@@ -19,7 +23,8 @@ COPY internal internal
 COPY main.go main.go
 
 # 编译源码成静态链接的二进制文件
-RUN CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags="-X main.ginMode=release" -o main .
+# 使用交叉编译，避免在 QEMU 模拟器中编译，极大提高构建速度
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w -X main.ginMode=release" -o main .
 
 # 第二阶段：运行阶段
 FROM alpine:latest
