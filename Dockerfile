@@ -9,8 +9,8 @@ ARG TARGETARCH
 # 设置工作目录
 WORKDIR /app
 
-# 设置代理 (为了构建稳定，使用官方代理)
-RUN go env -w GOPROXY=https://proxy.golang.org,direct
+# 设置代理
+RUN go env -w GOPROXY=https://goproxy.cn
 
 # 复制 go.mod 和 go.sum 文件
 COPY go.mod go.sum ./
