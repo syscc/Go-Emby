@@ -33,7 +33,7 @@ func main() {
 
 	// Flags
 	printVersion := flag.Bool("version", false, "查看程序版本")
-	dr := flag.String("dr", "./app", "程序数据根目录") // Default to ./app for manager mode
+	dr := flag.String("dr", "/app", "程序数据根目录") // Default to /app for docker environment
 	wp := flag.Int("p", 8090, "WebUI 管理后台端口")
 
 	// Kernel flags
