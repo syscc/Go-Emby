@@ -1,5 +1,6 @@
 # 第一阶段：构建阶段
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+# 使用 Debian 基础镜像，构建环境更稳定
+FROM --platform=$BUILDPLATFORM golang:1.24 AS builder
 
 # 声明构建参数
 ARG TARGETOS
