@@ -42,8 +42,6 @@ WORKDIR /app
 COPY --from=builder /app/main /app/main
 
 # 暴露端口
-EXPOSE 8095
-EXPOSE 8094
 EXPOSE 8090
 
 # 运行应用程序
