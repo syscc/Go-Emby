@@ -49,4 +49,4 @@ RUN chmod +x /usr/bin/go-emby
 EXPOSE 8090
 
 # 运行应用程序
-CMD ["/usr/bin/go-emby"]
+CMD ["/usr/bin/go-emby", "-dr", "/app"]
