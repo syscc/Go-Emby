@@ -5,7 +5,7 @@
 <h1 align="center">Go-Emby</h1>
 
 <div align="center">
-  <a href="https://github.com/syscc/Go-Emby/tree/v0.0.1"><img src="https://img.shields.io/github/v/tag/syscc/Go-Emby"></img></a>
+  <a href="https://github.com/syscc/Go-Emby/releases/latest"><img src="https://img.shields.io/github/v/tag/syscc/Go-Emby"></img></a>
   <a href="https://github.com/syscc/Go-Emby/releases/latest"><img src="https://img.shields.io/github/downloads/syscc/Go-Emby/total"></img></a>
   <img src="https://img.shields.io/github/stars/syscc/Go-Emby"></img>
   <img src="https://img.shields.io/github/license/syscc/Go-Emby"></img>
