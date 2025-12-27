@@ -1,6 +1,5 @@
 # 第一阶段：构建阶段
-# 使用 Debian 基础镜像，构建环境更稳定
-FROM --platform=$BUILDPLATFORM golang:1.24 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
 
 # 声明构建参数
 ARG TARGETOS
@@ -27,10 +26,6 @@ COPY main.go main.go
 # 打印构建环境信息，用于调试
 RUN echo "Building for $TARGETOS/$TARGETARCH"
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -tags netgo -ldflags="-s -w -extldflags '-static' -X main.ginMode=release" -o main .
-
-# 验证二进制文件类型
-RUN file main || true
-RUN ls -lh main
 
 # 第二阶段：运行阶段
 # 使用 Alpine 以支持多架构 (linux/386, linux/arm/v7 等)
