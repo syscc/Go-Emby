@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/syscc/Emby-Go/internal/config"
 	"github.com/syscc/Emby-Go/internal/constant"
 	"github.com/syscc/Emby-Go/internal/db"
@@ -23,7 +24,6 @@ import (
 	"github.com/syscc/Emby-Go/internal/web"
 	"github.com/syscc/Emby-Go/internal/web/webport"
 	"github.com/syscc/Emby-Go/internal/webui"
-	"github.com/gin-gonic/gin"
 )
 
 var ginMode = gin.DebugMode
@@ -184,14 +184,14 @@ func setupLogHook(logDir, prefix string) {
 
 func printBanner() {
 	fmt.Printf(colors.ToYellow(`
-                                 _           ___                        _ _     _   
-                                | |         |__ \                      | (_)   | |  
-  __ _  ___ ______ ___ _ __ ___ | |__  _   _   ) |___  _ __   ___ _ __ | |_ ___| |_ 
- / _| |/ _ \______/ _ \ '_ | _ \| '_ \| | | | / // _ \| '_ \ / _ \ '_ \| | / __| __|
-| (_| | (_) |    |  __/ | | | | | |_) | |_| |/ /| (_) | |_) |  __/ | | | | \__ \ |_ 
- \__, |\___/      \___|_| |_| |_|_.__/ \__, |____\___/| .__/ \___|_| |_|_|_|___/\__|
-  __/ |                                 __/ |         | |                           
- |___/                                 |___/          |_|                           
+                                                                                    
+                                | |                                                 
+  __ _  ___ ______ ___ _ __ ___ | |__  _   _                                        
+ / _| |/ _ \______/ _ \ '_ | _ \| '_ \| | | |                                       
+| (_| | (_) |    |  __/ | | | | | |_) | |_| |                                       
+ \__, |\___/      \___|_| |_| |_|_.__/ \__, |                                       
+  __/ |                                 __/ |                                       
+ |___/                                 |___/                                        
 
  Repository: %s
     Version: %s
