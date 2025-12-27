@@ -9,3 +9,4 @@ openlist-local-tree
 lib
 dist
 /app
+.vscode/
