@@ -267,6 +267,12 @@ func captureLogs(s db.EmbyServer, r io.ReadCloser) {
 	for {
 		line, err := br.ReadString('\n')
 		if len(line) > 0 {
+			line = strings.TrimSpace(line)
+			// Skip gin default request log
+			if strings.Contains(line, "[ge2o:v") {
+				continue
+			}
+			
 			level := "INFO"
 			if strings.Contains(line, "[ERROR]") {
 				level = "ERROR"
