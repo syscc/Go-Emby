@@ -32,16 +32,26 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	// Common
 	"Range": {}, "Host": {}, "Referrer": {}, "Connection": {},
 	"Accept": {}, "Accept-Encoding": {}, "Accept-Language": {}, "Cache-Control": {},
-	"Upgrade-Insecure-Requests": {}, "Referer": {}, "Origin": {},
+	"Upgrade-Insecure-Requests": {}, "Referer": {}, "Origin": {}, "User-Agent": {},
+	"Pragma": {}, "Priority": {}, "Cookie": {},
+	"Sec-Fetch-Dest": {}, "Sec-Fetch-Mode": {}, "Sec-Fetch-Site": {},
+	"Sec-Ch-Ua": {}, "Sec-Ch-Ua-Mobile": {}, "Sec-Ch-Ua-Platform": {},
+	"Content-Type": {}, "Content-Length": {},
+
+	// Emby Auth & Device (忽略这些以实现多用户/多设备共享缓存)
+	"X-Emby-Token": {}, "X-Emby-Device-Id": {}, "X-Emby-Device-Name": {},
+	"X-Emby-Client": {}, "X-Emby-Client-Version": {},
 
 	// StreamMusic
 	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {},
 
-	// IP
+	// CDN & Proxy Headers (忽略 CDN 动态头)
 	"X-Forwarded-For": {}, "X-Real-IP": {}, "X-Real-Ip": {}, "Forwarded": {}, "Client-IP": {},
 	"True-Client-IP": {}, "CF-Connecting-IP": {}, "X-Cluster-Client-IP": {},
 	"Fastly-Client-IP": {}, "X-Client-IP": {}, "X-ProxyUser-IP": {},
 	"Via": {}, "Forwarded-For": {}, "X-From-Cdn": {},
+	"Ali-Swift-Log-Host": {}, "Eagleid": {}, "X-Amz-Cf-Id": {}, "X-Request-Id": {},
+	"X-Via": {}, "X-Ca-Request-Id": {}, "X-Nginx-Proxy": {},
 }
 
 // CacheableRouteMarker 缓存白名单
@@ -149,6 +159,13 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	for key := range CacheKeyIgnoreParams {
 		q.Del(key)
 	}
+	// 额外忽略 Query 中的动态参数
+	q.Del("api_key")
+	q.Del("X-Emby-Token")
+	q.Del("DeviceId")
+	q.Del("reqformat")
+	q.Del("static")
+	
 	c.Request.URL.RawQuery = q.Encode()
 	uri := c.Request.URL.String()
 
