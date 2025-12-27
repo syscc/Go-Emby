@@ -24,23 +24,33 @@ COPY internal internal
 COPY main.go main.go
 
 # 编译源码成静态链接的二进制文件
-# 使用交叉编译，避免在 QEMU 模拟器中编译，极大提高构建速度
-# 强制静态链接：-tags netgo -ldflags '-extldflags "-static"'
+# 打印构建环境信息，用于调试
+RUN echo "Building for $TARGETOS/$TARGETARCH"
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -tags netgo -ldflags="-s -w -extldflags '-static' -X main.ginMode=release" -o main .
 
-# 第二阶段：运行阶段
-FROM alpine:latest
+# 验证二进制文件类型
+RUN file main || true
+RUN ls -lh main
 
-# 设置时区
-RUN apk add --no-cache tzdata ca-certificates
+# 第二阶段：运行阶段
+# 暂时使用 Ubuntu 以排除 Alpine 兼容性问题 (exec user process caused: no such file or directory 通常是动态链接库缺失导致)
+FROM ubuntu:22.04
+
+# 设置时区和证书
 ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /app
 
 # 从构建阶段复制编译后的二进制文件
 COPY --from=builder /app/main /app/main
+
+# 赋予执行权限
+RUN chmod +x /app/main
 
 # 暴露端口
 EXPOSE 8090
