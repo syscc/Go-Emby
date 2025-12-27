@@ -33,27 +33,25 @@ RUN file main || true
 RUN ls -lh main
 
 # 第二阶段：运行阶段
-# 暂时使用 Ubuntu 以排除 Alpine 兼容性问题 (exec user process caused: no such file or directory 通常是动态链接库缺失导致)
-FROM ubuntu:22.04
+# 使用 Alpine 以支持多架构 (linux/386, linux/arm/v7 等)
+FROM alpine:latest
 
 # 设置时区和证书
 ENV TZ=Asia/Shanghai
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates tzdata && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache tzdata ca-certificates && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 设置工作目录
 WORKDIR /app
 
-# 从构建阶段复制编译后的二进制文件
-COPY --from=builder /app/main /app/main
+# 从构建阶段复制编译后的二进制文件到 /usr/bin，防止被 /app 挂载覆盖
+COPY --from=builder /app/main /usr/bin/go-emby
 
 # 赋予执行权限
-RUN chmod +x /app/main
+RUN chmod +x /usr/bin/go-emby
 
 # 暴露端口
 EXPOSE 8090
 
 # 运行应用程序
-CMD ["/app/main"]
+CMD ["/usr/bin/go-emby"]
