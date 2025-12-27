@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+dist
+app
+openlist-local-tree
+ssl
+*.exe
+*.syso
+build.sh
+docker-compose.yml
+README.md
+LICENSE
+config-example.yml
+go.work
+go.work.sum

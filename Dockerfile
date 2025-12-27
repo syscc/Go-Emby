@@ -4,19 +4,21 @@ FROM golang:1.24-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
+# 安装基础工具
+RUN apk add --no-cache git
+
 # 复制 go.mod 和 go.sum 文件
 COPY go.mod go.sum ./
 
 # 下载依赖
 RUN go mod download
 
-# 复制源码
-COPY cmd cmd
-COPY internal internal
-COPY main.go main.go
+# 复制所有源码
+COPY . .
 
 # 编译源码成静态链接的二进制文件
-RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.ginMode=release" -o main .
+# -v 打印编译过程，方便排查错误
+RUN CGO_ENABLED=0 go build -v -ldflags="-s -w -X main.ginMode=release" -o main .
 
 # 第二阶段：运行阶段
 FROM alpine:latest
