@@ -24,7 +24,8 @@ COPY main.go main.go
 
 # 编译源码成静态链接的二进制文件
 # 使用交叉编译，避免在 QEMU 模拟器中编译，极大提高构建速度
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w -X main.ginMode=release" -o main .
+# 强制静态链接：-tags netgo -ldflags '-extldflags "-static"'
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -tags netgo -ldflags="-s -w -extldflags '-static' -X main.ginMode=release" -o main .
 
 # 第二阶段：运行阶段
 FROM alpine:latest
