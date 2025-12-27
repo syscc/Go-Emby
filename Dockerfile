@@ -4,8 +4,8 @@ FROM golang:1.24-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
-# 安装基础工具
-RUN apk add --no-cache git
+# 设置代理 (为了构建稳定，使用官方代理)
+RUN go env -w GOPROXY=https://proxy.golang.org,direct
 
 # 复制 go.mod 和 go.sum 文件
 COPY go.mod go.sum ./
@@ -13,12 +13,13 @@ COPY go.mod go.sum ./
 # 下载依赖
 RUN go mod download
 
-# 复制所有源码
-COPY . .
+# 复制源码
+COPY cmd cmd
+COPY internal internal
+COPY main.go main.go
 
 # 编译源码成静态链接的二进制文件
-# -v 打印编译过程，方便排查错误
-RUN CGO_ENABLED=0 go build -v -ldflags="-s -w -X main.ginMode=release" -o main .
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags="-X main.ginMode=release" -o main .
 
 # 第二阶段：运行阶段
 FROM alpine:latest
