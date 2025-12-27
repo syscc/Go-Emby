@@ -33,6 +33,9 @@ var C *Config
 // BasePath 配置文件所在的基础路径
 var BasePath string
 
+// DataRoot 程序数据根目录
+var DataRoot string
+
 type Initializer interface {
 	// Init 配置初始化
 	Init() error

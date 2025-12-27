@@ -55,11 +55,14 @@ func main() {
 			}
 		}
 	}
-	if *dr == "./app" {
+	if *dr == "./app" || *dr == "/app" { // Handle both defaults
 		if v := os.Getenv("dr"); v != "" {
 			*dr = v
 		}
 	}
+
+	// Set global DataRoot in config
+	config.DataRoot = *dr
 	// kernel-only is bool, explicit flag usually overrides env, but if flag is false (default)
 	// and env is true, we should set it?
 	if !*kernelOnly {

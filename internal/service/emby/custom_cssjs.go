@@ -113,7 +113,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 		return res, nil
 	}
 
-	fp := filepath.Join(config.BasePath, "app", constant.CustomJsDirName)
+	fp := filepath.Join(config.DataRoot, constant.CustomJsDirName)
 	jsList, err := loadFiles(fp, ".js", "自定义脚本")
 	if err != nil {
 		logs.Error("加载自定义脚本异常: %v", err)
@@ -121,7 +121,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 	}
 	customJsList = jsList
 
-	fp = filepath.Join(config.BasePath, "app", constant.CustomCssDirName)
+	fp = filepath.Join(config.DataRoot, constant.CustomCssDirName)
 	cssList, err := loadFiles(fp, ".css", "自定义样式表")
 	if err != nil {
 		logs.Error("加载自定义样式表异常: %v", err)
