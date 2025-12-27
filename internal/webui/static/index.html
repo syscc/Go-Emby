@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emby-GO Management</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Login/Setup Screen -->
+        <div id="auth-screen" class="hidden">
+            <div class="auth-box">
+                <div class="logo-container">
+                    <img src="logo.png" alt="Emby-GO Logo" class="auth-logo">
+                </div>
+                <div class="lang-switch-auth">
+                    <button id="lang-btn-auth" class="btn-lang" onclick="toggleLang()"></button>
+                </div>
+                <h2 id="auth-title" data-t="appTitle">Login</h2>
+                <p id="auth-subtitle" class="subtitle"></p>
+                <form id="auth-form">
+                    <input type="text" id="auth-username" data-t="username" placeholder="Username" required>
+                    <input type="password" id="auth-password" data-t="password" placeholder="Password" required>
+                    <button type="submit" id="auth-submit" data-t="login">Login</button>
+                    <div id="auth-error" class="error-msg"></div>
+                </form>
+            </div>
+            <div class="auth-footer github-link">
+                <a href="https://github.com/syscc/Go-Emby" target="_blank" title="GitHub Project">
+                    <i class="fa-brands fa-github"></i> <span data-t="projectAddress">Project Address (GitHub)</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <nav id="sidebar">
+                <div class="brand">
+                    <a href="/" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+                        <img src="logo.png" alt="Logo" class="sidebar-logo">
+                        <span>Emby-GO</span>
+                    </a>
+                </div>
+                <ul class="menu">
+                    <li data-target="servers-page" class="active"><i class="fa-solid fa-network-wired"></i> <span
+                            data-t="servers">Media Servers</span></li>
+                    <li data-target="logs-page"><i class="fa-solid fa-terminal"></i> <span data-t="logs">Logs</span>
+                    </li>
+                    <li data-target="config-page"><i class="fa-solid fa-file-lines"></i> <span data-t="configFile">Config</span>
+                    </li>
+                    <li data-target="users-page"><i class="fa-solid fa-users-gear"></i> <span data-t="users">User
+                            Management</span></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <div class="lang-switch-sidebar">
+                        <button id="lang-btn-sidebar" class="btn-lang-sm" onclick="toggleLang()"></button>
+                    </div>
+                    <div class="logout">
+                        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> <span
+                                data-t="logout">Logout</span></button>
+                    </div>
+                    <div class="github-link">
+                        <a href="https://github.com/syscc/Go-Emby" target="_blank" title="GitHub Project">
+                            <i class="fa-brands fa-github"></i> <span data-t="projectAddress">Project Address
+                                (GitHub)</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <main id="content">
+                <!-- Media Servers Page -->
+                <div id="servers-page" class="page active">
+                    <div class="page-header">
+                        <h2 data-t="servers">Media Servers</h2>
+                        <button class="btn btn-primary" onclick="showServerModal()"><i class="fa-solid fa-plus"></i>
+                            <span data-t="addServer">Add Server</span></button>
+                    </div>
+                    <div id="servers-list" class="grid-list">
+                        <!-- Server cards will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Logs Page -->
+                <div id="logs-page" class="page">
+                    <div class="page-header">
+                        <h2 data-t="logs">System Logs</h2>
+                        <div class="filters">
+                            <select id="log-server-filter" style="margin-right: 10px;">
+                                <option value="all" data-t="allServers">All Servers</option>
+                            </select>
+                            <select id="log-filter">
+                                <option value="playback" data-t="playbackOnly">Playback Logs</option>
+                                <option value="error" data-t="errorLogs">Error Logs</option>
+                                <option value="all" data-t="allLogs">All Logs</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="fetchLogs()"><i class="fa-solid fa-rotate"></i>
+                                <span data-t="refresh">Refresh</span></button>
+                            <button class="btn btn-secondary" onclick="clearLogs()"><i class="fa-solid fa-eraser"></i>
+                                <span data-t="clear">Clear</span></button>
+                            <button id="log-autorefresh-toggle" class="btn btn-secondary"><i class="fa-solid fa-clock"></i>
+                                <span data-t="autoNormal">Auto Refresh: 3s</span></button>
+                        </div>
+                    </div>
+                    <div class="log-viewer">
+                        <table id="logs-table">
+                            <thead>
+                                <tr>
+                                    <th data-t="time">Time</th>
+                                    <th data-t="serverName">Server</th>
+                                    <th data-t="level">Level</th>
+                                    <th data-t="message">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Logs will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Config Page -->
+                <div id="config-page" class="page">
+                    <div class="page-header">
+                        <h2 data-t="configFile">Config</h2>
+                        <div class="filters">
+                            <button class="btn btn-secondary" onclick="loadGlobalConfig()"><i class="fa-solid fa-rotate"></i>
+                                <span data-t="refresh">Refresh</span></button>
+                            <button class="btn btn-primary" onclick="saveGlobalConfig()"><i class="fa-solid fa-floppy-disk"></i>
+                                <span data-t="save">Save</span></button>
+                        </div>
+                    </div>
+                    <div class="card form-card">
+                        <div class="form-group">
+                            <label data-t="episodesUnplayPrior">Episodes unplayed first</label>
+                            <div class="subtitle" data-t="episodesUnplayPriorDesc">Reorder episodes to show unplayed first</div>
+                            <input type="checkbox" id="g-episodes" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="resortRandomItems">Resort random items</label>
+                            <div class="subtitle" data-t="resortRandomItemsDesc">Second pass randomization for more randomness</div>
+                            <input type="checkbox" id="g-resort" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="proxyErrorStrategy">Proxy error strategy</label>
+                            <div class="subtitle" data-t="proxyErrorStrategyDesc">origin: back to source; reject: deny</div>
+                            <select id="g-proxy">
+                                <option value="origin">origin</option>
+                                <option value="reject">reject</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="imagesQuality">Images quality</label>
+                            <div class="subtitle" data-t="imagesQualityDesc">Range 1-100; recommend 70-90</div>
+                            <input type="number" id="g-images" min="1" max="100" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="downloadStrategy">Download strategy</label>
+                            <div class="subtitle" data-t="downloadStrategyDesc">403: disable; origin: proxy; direct: redirect to link</div>
+                            <select id="g-download">
+                                <option value="403">403</option>
+                                <option value="origin">origin</option>
+                                <option value="direct">direct</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="cacheEnable">Cache enable</label>
+                            <input type="checkbox" id="g-cache-enable" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="cacheExpired">Cache expired</label>
+                            <input type="text" id="g-cache-expired" placeholder="1d" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="cacheWhitelist">Cache whitelist (regex per line)</label>
+                            <div class="subtitle" data-t="cacheWhitelistDesc">Only matched routes are cached; leave empty to use defaults</div>
+                            <textarea id="g-cache-whitelist" placeholder="(?i)^/.*/items/.*/playbackinfo&#10;(?i)^/.*/videos/.*/subtitles" style="min-height:100px"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="vpEnable">Video preview enable</label>
+                            <input type="checkbox" id="g-vp-enable" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="vpContainers">Video preview containers</label>
+                            <input type="text" id="g-vp-containers" placeholder="mp4,mkv" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="vpIgnore">Video preview ignore templates</label>
+                            <input type="text" id="g-vp-ignore" placeholder="LD,SD" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="pathEmby2Openlist">Path emby2openlist</label>
+                            <textarea id="g-path" placeholder="/movie:/电影&#10;/series:/电视剧" style="min-height:120px"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="logDisableColor">Log disable color</label>
+                            <input type="checkbox" id="g-log-disable" />
+                        </div>
+                        <hr/>
+                        <h3>STRM</h3>
+                        <div class="form-group">
+                            <label data-t="strmPathMap">STRM path-map</label>
+                            <div class="subtitle" data-t="strmPathMapDesc">Each line: from => to</div>
+                            <textarea id="g-strm-path" placeholder="https://a.com => http://b.com&#10;12138 => 10086" style="min-height:100px"></textarea>
+                        </div>
+                        <hr/>
+                        <h3>OpenList Local Tree Gen</h3>
+                        <div class="form-group">
+                            <label data-t="ltgEnable">Enable</label>
+                            <input type="checkbox" id="g-ltg-enable" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgFfmpeg">FFmpeg enable</label>
+                            <input type="checkbox" id="g-ltg-ffmpeg" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgVirtual">Virtual containers</label>
+                            <input type="text" id="g-ltg-virtual" placeholder="mp4,mkv" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgStrm">STRM containers</label>
+                            <input type="text" id="g-ltg-strm" placeholder="ts" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgMusic">Music containers</label>
+                            <input type="text" id="g-ltg-music" placeholder="mp3,flac" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgAutoRemove">Auto remove max count</label>
+                            <input type="number" id="g-ltg-auto-remove" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgRefresh">Refresh interval (minutes)</label>
+                            <input type="number" id="g-ltg-refresh" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgScanPrefixes">Scan prefixes</label>
+                            <textarea id="g-ltg-scan" placeholder="/电影/G&#10;/电视剧" style="min-height:100px"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgIgnoreContainers">Ignore containers</label>
+                            <input type="text" id="g-ltg-ignore" placeholder="jpg,jpeg,png,txt,nfo,md" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="ltgThreads">Threads</label>
+                            <input type="number" id="g-ltg-threads" />
+                        </div>
+                        <hr/>
+                        <h3>SSL</h3>
+                        <div class="form-group">
+                            <label data-t="sslEnable">Enable HTTPS</label>
+                            <input type="checkbox" id="g-ssl-enable" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="sslSingle">Single Port</label>
+                            <input type="checkbox" id="g-ssl-single" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="sslKey">SSL Key</label>
+                            <input type="text" id="g-ssl-key" />
+                        </div>
+                        <div class="form-group">
+                            <label data-t="sslCrt">SSL Cert</label>
+                            <input type="text" id="g-ssl-crt" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management Page -->
+                <div id="users-page" class="page">
+                    <div class="page-header">
+                        <h2 data-t="users">User Management</h2>
+                    </div>
+                    <div class="card form-card">
+                        <h3 data-t="updatePassword">Change Password</h3>
+                        <form id="change-password-form">
+                            <div class="form-group">
+                                <label data-t="username">Username</label>
+                                <input type="text" id="cp-username" readonly value="admin">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="newPassword">New Password</label>
+                                <input type="password" id="cp-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" data-t="updatePassword">Update
+                                Password</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Server Modal -->
+        <div id="server-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title" data-t="addServer">Add Server</h3>
+                    <span class="close" onclick="closeServerModal()">&times;</span>
+                </div>
+                <form id="server-form">
+                    <input type="hidden" id="server-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-t="serverName">Name</label>
+                            <input type="text" id="server-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="port">HTTP Port</label>
+                            <input type="number" id="server-port" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Emby Host</label>
+                        <input type="text" id="server-emby-host" placeholder="http://192.168.1.x:8096" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Emby Token</label>
+                        <input type="text" id="server-emby-token">
+                    </div>
+                    <div class="form-group">
+                        <label data-t="mountPath">Mount Path (302 Redirect)</label>
+                        <input type="text" id="server-mount-path" placeholder="/mnt/media,/mnt/media2;/mnt/media3">
+                        <div class="subtitle" data-t="mountPathDesc">Multiple paths supported, separate by comma or semicolon</div>
+                    </div>
+                    <div class="form-group">
+                        <label data-t="localMediaRoot">Local Media Root</label>
+                        <input type="text" id="server-local-media-root" placeholder="/var/lib/emby/data">
+                        <div class="subtitle" data-t="localMediaRootDesc">Files starting with this path will bypass proxy</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Openlist Host</label>
+                            <input type="text" id="server-openlist-host">
+                        </div>
+                        <div class="form-group">
+                            <label>Openlist Token</label>
+                            <input type="text" id="server-openlist-token">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-t="dlCacheValue">Direct Link Cache</label>
+                            <input type="number" id="server-dl-cache-value" min="1" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label data-t="dlCacheUnit">Unit</label>
+                            <select id="server-dl-cache-unit">
+                                <option value="m">m</option>
+                                <option value="h">h</option>
+                                <option value="d">d</option>
+                                <option value="s">s</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="server-internal-redirect">
+                        <label for="server-internal-redirect" data-t="internalRedirect">Enable Internal Redirect</label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeServerModal()"
+                            data-t="cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary" data-t="save">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

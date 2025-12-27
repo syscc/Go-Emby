@@ -1,0 +1,19 @@
+services:
+  go-emby:
+    image: syscc/go-emby:latest
+    environment:
+      - TZ=Asia/Shanghai
+      - GIN_MODE=release
+      - webui=8090
+    container_name: go-emby
+    restart: always
+    volumes:
+      - ./app:/app
+      # OpenList 本地目录树生成：将宿主机目录映射到容器内存储位置
+      # - ./openlist-local-tree:/app/openlist-local-tree
+    network_mode: host
+    # 如果宿主机不支持 host 网络模式（如 Docker Desktop），请删除上面的 network_mode: host，并改用如下端口映射：
+    # ports:
+    #   - 8095:8095  # HTTP 内核端口
+    #   - 8094:8094  # HTTPS 内核端口
+    #   - 8090:8090  # WebUI 端口（与 app/.env 中 webui 保持一致）
