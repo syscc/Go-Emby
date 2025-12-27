@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/syscc/Emby-Go/internal/constant"
 	"github.com/syscc/Emby-Go/internal/util/encrypts"
 	"github.com/syscc/Emby-Go/internal/util/https"
 	"github.com/syscc/Emby-Go/internal/util/logs"
-	"github.com/syscc/Emby-Go/internal/util/logs/colors"
-	"github.com/syscc/Emby-Go/internal/util/strs"
 	"github.com/syscc/Emby-Go/internal/util/urls"
 
 	"github.com/gin-gonic/gin"
@@ -34,24 +31,22 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	"Accept": {}, "Accept-Encoding": {}, "Accept-Language": {}, "Cache-Control": {},
 	"Upgrade-Insecure-Requests": {}, "Referer": {}, "Origin": {}, "User-Agent": {},
 	"Pragma": {}, "Priority": {}, "Cookie": {},
+
+	// 忽略浏览器动态头
 	"Sec-Fetch-Dest": {}, "Sec-Fetch-Mode": {}, "Sec-Fetch-Site": {},
 	"Sec-Ch-Ua": {}, "Sec-Ch-Ua-Mobile": {}, "Sec-Ch-Ua-Platform": {},
 	"Content-Type": {}, "Content-Length": {},
 
-	// Emby Auth & Device (忽略这些以实现多用户/多设备共享缓存)
-	"X-Emby-Token": {}, "X-Emby-Device-Id": {}, "X-Emby-Device-Name": {},
-	"X-Emby-Client": {}, "X-Emby-Client-Version": {},
+	// 忽略 Auth & Identity (实现多用户共享缓存)
+	"X-Emby-Token": {}, "X-Emby-Authorization": {}, "Authorization": {},
+	"X-Emby-Device-Id": {}, "X-Emby-Device-Name": {},
 
-	// StreamMusic
-	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {},
-
-	// CDN & Proxy Headers (忽略 CDN 动态头)
-	"X-Forwarded-For": {}, "X-Real-IP": {}, "X-Real-Ip": {}, "Forwarded": {}, "Client-IP": {},
-	"True-Client-IP": {}, "CF-Connecting-IP": {}, "X-Cluster-Client-IP": {},
-	"Fastly-Client-IP": {}, "X-Client-IP": {}, "X-ProxyUser-IP": {},
-	"Via": {}, "Forwarded-For": {}, "X-From-Cdn": {},
-	"Ali-Swift-Log-Host": {}, "Eagleid": {}, "X-Amz-Cf-Id": {}, "X-Request-Id": {},
-	"X-Via": {}, "X-Ca-Request-Id": {}, "X-Nginx-Proxy": {},
+	// 忽略 IP & Proxy & CDN (实现任意 IP 共享缓存)
+	"X-Emby-Client-IP": {}, "X-Real-IP": {}, "X-Forwarded-For": {},
+	"X-Forwarded-Proto": {}, "X-Forwarded-Host": {}, "X-Forwarded-Port": {},
+	"Via": {}, "X-Via": {},
+	"Cf-Ray": {}, "Cf-Visitor": {}, "Cf-Connecting-Ip": {}, "Cf-Ipcountry": {},
+	"Ali-Cdn-Real-Ip": {}, "Ali-Swift-Log-Host": {},
 }
 
 // CacheableRouteMarker 缓存白名单
@@ -95,6 +90,8 @@ func RequestCacher() gin.HandlerFunc {
 
 		// 3 尝试获取缓存
 		if rc, ok := getCache(cacheKey); ok {
+			// 调试日志：命中缓存
+			logs.Tip("GetCache Hit: %s", cacheKey)
 			if https.IsRedirectCode(rc.code) {
 				// 适配重定向请求
 				location := rc.header.header.Get("Location")
@@ -123,6 +120,7 @@ func RequestCacher() gin.HandlerFunc {
 
 		// 7 刷新缓存
 		header := c.Writer.Header()
+		// logs.Tip("RespHeader Expired: '%s'", header.Get(HeaderKeyExpired)) // 调试日志
 		respHeader := respHeader{
 			expired:  header.Get(HeaderKeyExpired),
 			space:    header.Get(HeaderKeySpace),
@@ -165,8 +163,28 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	q.Del("DeviceId")
 	q.Del("reqformat")
 	q.Del("static")
-	
-	c.Request.URL.RawQuery = q.Encode()
+	q.Del("MediaSourceId")
+	q.Del("PlaySessionId")
+	q.Del("LiveStreamId")
+	q.Del("StartTimeTicks")
+
+	q.Del("AutoOpenLiveStream")
+	q.Del("IsPlayback")
+
+	// 忽略直链签名等动态参数
+	q.Del("tempauth")
+	q.Del("Translate")
+	q.Del("UniqueId")
+	q.Del("ApiVersion")
+
+	// 忽略客户端 IP 相关参数 (关键)
+	q.Del("X-Emby-Client-IP")
+	q.Del("X-Real-IP")
+	q.Del("X-Forwarded-For")
+
+	// 再次尝试覆盖 RawQuery (关键)
+	rawQuery := q.Encode()
+	c.Request.URL.RawQuery = rawQuery
 	uri := c.Request.URL.String()
 
 	body := ""
@@ -178,23 +196,15 @@ func calcCacheKey(c *gin.Context) (string, error) {
 		body = string(bodyBytes)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
-	header := strings.Builder{}
-	for key, values := range c.Request.Header {
-		if _, ok := CacheKeyIgnoreParams[key]; ok {
-			continue
-		}
-		header.WriteString(key)
-		header.WriteString("=")
-		header.WriteString(strings.Join(values, "|"))
-		header.WriteString(";")
-	}
+	// 1. 提取所有需要参与计算的 Header Keys
+	// 为解决 CDN/不同客户端 导致的 Header 不一致问题，
+	// 且我们的缓存主要针对 302 重定向链接 (不依赖 Header)，
+	// 故在此处 强制忽略所有 Header，只根据 URL (Path + Filtered Query) 生成 Key。
+	// 这样可以最大程度提高缓存命中率。
+	headerStr := ""
 
-	headerStr := header.String()
-	preEnc := strs.Sort(c.Request.URL.RawQuery + body + headerStr)
-	if headerStr != "" {
-		logs.Tip("headers to encode cacheKey: %s", colors.ToYellow(headerStr))
-	}
-
+	// 4. 构建用于 Hash 的完整字符串
+	// c.Request.URL.RawQuery 已经是排序过的 (q.Encode() 会排序)
 	// 为防止字典排序后, 不同的 uri 冲突, 这里在排序完的字符串前再加上原始的 uri
 	uriNoArgs := urls.ReplaceAll(
 		uri,
@@ -202,6 +212,8 @@ func calcCacheKey(c *gin.Context) (string, error) {
 		c.Request.URL.RawQuery, "",
 	)
 
-	hash := encrypts.Md5Hash(method + uriNoArgs + preEnc)
+	fullStringToHash := method + uriNoArgs + "?" + c.Request.URL.RawQuery + body + headerStr
+
+	hash := encrypts.Md5Hash(fullStringToHash)
 	return hash, nil
 }

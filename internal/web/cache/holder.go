@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/syscc/Emby-Go/internal/config"
+	"github.com/syscc/Emby-Go/internal/util/logs"
 	"github.com/syscc/Emby-Go/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
@@ -117,18 +118,23 @@ func putCache(cacheKey string, c *gin.Context, respBody []byte, respHeader respH
 
 	// 计算缓存过期时间
 	nowMillis := time.Now().UnixMilli()
-	expiredMillis := int64(DefaultExpired()) + nowMillis
+	// DefaultExpired() 返回的是 time.Duration (ns), 需要转为毫秒
+	expiredMillis := int64(DefaultExpired())/int64(time.Millisecond) + nowMillis
 	if expiredNum, err := strconv.Atoi(respHeader.expired); err == nil {
 		customMillis := int64(expiredNum)
 
 		// 特定接口不使用缓存
 		if customMillis < 0 {
+			logs.Warn("HeaderKeyExpired 为 -1, 跳过写入缓存: %s", cacheKey)
 			return
 		}
 
 		if customMillis > nowMillis {
 			expiredMillis = customMillis
 		}
+	} else {
+		// 调试日志：看看如果没有设置 HeaderKeyExpired 会发生什么
+		// logs.Warn("HeaderKeyExpired 未设置或解析失败: '%s', 使用默认过期时间: %v, cacheKey: %s", respHeader.expired, DefaultExpired(), cacheKey)
 	}
 
 	rc := &respCache{
