@@ -10,6 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+      - name: Build binaries
+        run: |
+          set -e
+          mkdir -p dist
+          export CGO_ENABLED=0
+          for GOOS in linux windows darwin; do
+            for GOARCH in amd64 arm64; do
+              BIN="go-emby"
+              EXT=""
+              if [ "$GOOS" = "windows" ]; then
+                EXT=".exe"
+              fi
+              OUT="dist/${BIN}_${GOOS}_${GOARCH}${EXT}"
+              GOOS=$GOOS GOARCH=$GOARCH go build -trimpath -o "$OUT" .
+            done
+          done
       - name: Build release notes
         id: notes
         run: |
@@ -26,5 +45,7 @@ jobs:
           tag_name: ${{ steps.notes.outputs.tag }}
           name: Go-Emby ${{ steps.notes.outputs.tag }}
           body_path: NOTES.md
+          files: |
+            dist/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
