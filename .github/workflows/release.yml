@@ -29,6 +29,18 @@ jobs:
               GOOS=$GOOS GOARCH=$GOARCH go build -trimpath -o "$OUT" .
             done
           done
+      - name: Package archives and checksums
+        run: |
+          set -e
+          cd dist
+          for f in go-emby_*; do
+            if echo "$f" | grep -qE '\.exe$'; then
+              zip "${f%.exe}.zip" "$f"
+            else
+              tar -czf "${f}.tar.gz" "$f"
+            fi
+          done
+          sha256sum * > SHA256SUMS.txt
       - name: Build release notes
         id: notes
         run: |
@@ -39,6 +51,10 @@ jobs:
           echo "${TITLE}" > "${NOTES_FILE}"
           if [ -f CHANGELOG.md ]; then
             awk "/^## ${TAG}/{flag=1; next} /^##/{flag=0} flag" CHANGELOG.md >> "${NOTES_FILE}" || true
+          fi
+          if ! grep -q "." "${NOTES_FILE}"; then
+            echo "" >> "${NOTES_FILE}"
+            echo "发布说明请查看 CHANGELOG.md。" >> "${NOTES_FILE}"
           fi
       - uses: softprops/action-gh-release@v2
         with:
