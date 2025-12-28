@@ -3,24 +3,45 @@ permissions:
   contents: write
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
+      - name: Setup tag variables
+        id: vars
+        run: |
+          set -e
+          REF="${GITHUB_REF}"
+          if echo "$REF" | grep -q '^refs/tags/'; then
+            TAG="${REF##*/}"
+            IS_TAG="true"
+            TARGET_COMMITISH=""
+          else
+            TAG=$(awk -F'"' '/CurrentVersion/{print $2}' internal/constant/constant.go)
+            IS_TAG="false"
+            TARGET_COMMITISH="main"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "is_tag=${IS_TAG}" >> "$GITHUB_OUTPUT"
+          echo "target_commitish=${TARGET_COMMITISH}" >> "$GITHUB_OUTPUT"
+          echo "TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "TARGET_COMMITISH=${TARGET_COMMITISH}" >> "$GITHUB_ENV"
+          echo "IS_TAG=${IS_TAG}" >> "$GITHUB_ENV"
       - name: Validate version constant equals tag
+        if: ${{ steps.vars.outputs.is_tag == 'true' }}
         run: |
           set -e
           VERSION=$(awk -F'"' '/CurrentVersion/{print $2}' internal/constant/constant.go)
-          echo "Detected version in code: ${VERSION}, tag: ${TAG}"
-          if [ "${VERSION}" != "${TAG}" ]; then
+          echo "Detected version in code: ${VERSION}, tag: ${{ steps.vars.outputs.tag }}"
+          if [ "${VERSION}" != "${{ steps.vars.outputs.tag }}" ]; then
             echo "Version mismatch: code=${VERSION}, tag=${TAG}"
             exit 1
           fi
@@ -56,6 +77,8 @@ jobs:
           sha256sum * > SHA256SUMS.txt
       - name: Build release notes
         id: notes
+        env:
+          TAG: ${{ steps.vars.outputs.tag }}
         run: |
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           TITLE="Go-Emby ${TAG}"
@@ -81,5 +104,6 @@ jobs:
           body_path: NOTES.md
           files: |
             dist/**
+          target_commitish: ${{ steps.vars.outputs.target_commitish }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
