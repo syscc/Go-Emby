@@ -117,6 +117,10 @@ func Start(port int) {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
+			servers, _ := db.GetServers()
+			for _, s := range servers {
+				_ = manager.Restart(s.ID)
+			}
 			c.Status(200)
 		})
 		auth.GET("/servers", func(c *gin.Context) {
