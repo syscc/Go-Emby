@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/syscc/Emby-Go/internal/db"
 	"github.com/syscc/Emby-Go/internal/manager"
-	"github.com/gin-gonic/gin"
 )
 
 //go:embed static/*
@@ -21,6 +21,7 @@ var staticFS embed.FS
 
 func Start(port int) {
 	r := gin.Default()
+	_ = r.SetTrustedProxies(nil)
 
 	api := r.Group("/api")
 	{
@@ -167,9 +168,8 @@ func Start(port int) {
 
 		auth.GET("/logs", func(c *gin.Context) {
 			type LogLine struct {
-				CreatedAt time.Time `json:"CreatedAt"`
-				Level     string    `json:"Level"`
-				Message   string    `json:"Message"`
+				Level   string `json:"Level"`
+				Message string `json:"Message"`
 			}
 			var list []LogLine
 			fp := filepath.Join(manager.DataRoot, "log", "go-emby_"+time.Now().Format("2006-01-02")+".log")
@@ -187,11 +187,9 @@ func Start(port int) {
 					if len(parts) < 3 {
 						continue
 					}
-					tm, _ := time.Parse("2006/01/02 15:04:05", parts[0])
 					list = append(list, LogLine{
-						CreatedAt: tm,
-						Level:     parts[1],
-						Message:   parts[2],
+						Level:   parts[1],
+						Message: parts[2],
 						// TODO: add origin
 					})
 				}

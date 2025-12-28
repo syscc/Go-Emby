@@ -56,6 +56,7 @@ func listenHTTP(errChan chan error) {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(CustomLogger(webport.HTTP))
+	_ = r.SetTrustedProxies(nil)
 	r.Use(func(c *gin.Context) {
 		c.Set(webport.GinKey, webport.HTTP)
 	})
@@ -73,6 +74,7 @@ func listenHTTPS(errChan chan error) {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(CustomLogger(webport.HTTPS))
+	_ = r.SetTrustedProxies(nil)
 	r.Use(func(c *gin.Context) {
 		c.Set(webport.GinKey, webport.HTTPS)
 	})

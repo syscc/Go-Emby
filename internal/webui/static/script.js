@@ -505,16 +505,12 @@ async function fetchLogs() {
         logs = logs.filter(l => l.Level === 'ERROR');
     }
 
-    if (logsCutoffMs !== null) {
+    // Prevent old logs from reappearing after "Clear"
+    if (logsCutoffMsgMs !== null) {
         logs = logs.filter(l => {
-            const ms = new Date(l.CreatedAt).getTime();
-            return ms > logsCutoffMs;
+            const ms = parseMsgTimeMs(l.Message);
+            return ms !== null && ms > logsCutoffMsgMs;
         });
-    }
-    const times = logs.map(l => new Date(l.CreatedAt).getTime()).filter(n => !isNaN(n));
-    if (times.length) {
-        const latest = Math.max(...times);
-        if (latest > logsLatestMs) logsLatestMs = latest;
     }
 
     const tbody = document.querySelector('#logs-table tbody');
@@ -534,7 +530,6 @@ async function fetchLogs() {
         }
 
         tr.innerHTML = `
-            <td>${new Date(l.CreatedAt).toLocaleString()}</td>
             <td>${serverName}</td>
             <td class="log-level-${l.Level.toLowerCase()}">${l.Level}</td>
             <td style="word-break: break-all;">${message}</td>
@@ -545,12 +540,12 @@ async function fetchLogs() {
 function clearLogs() {
     const tbody = document.querySelector('#logs-table tbody');
     if (tbody) tbody.innerHTML = '';
-    logsCutoffMs = logsLatestMs || Date.now();
+    // Use current time as cutoff so historical lines won't be shown on next refresh
+    logsCutoffMsgMs = Date.now();
 }
 let logsAutoTimer = null;
 let logsAutoMs = 3000;
-let logsCutoffMs = null;
-let logsLatestMs = 0;
+let logsCutoffMsgMs = null;
 function startLogsAutoRefresh() {
     if (logsAutoTimer) clearInterval(logsAutoTimer);
     logsAutoTimer = setInterval(fetchLogs, logsAutoMs);
@@ -671,6 +666,22 @@ async function fetchAuthenticated(url, options = {}) {
         return null;
     }
     return res;
+}
+
+function parseMsgTimeMs(msg) {
+    if (!msg || typeof msg !== 'string') return null;
+    // Match timestamp anywhere (handles leading "[ServerName] ")
+    const m = msg.match(/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+    if (!m) return null;
+    const y = parseInt(m[1], 10);
+    const mo = parseInt(m[2], 10) - 1;
+    const d = parseInt(m[3], 10);
+    const hh = parseInt(m[4], 10);
+    const mm = parseInt(m[5], 10);
+    const ss = parseInt(m[6], 10);
+    const dt = new Date(y, mo, d, hh, mm, ss);
+    const ms = dt.getTime();
+    return isNaN(ms) ? null : ms;
 }
 
 // Start

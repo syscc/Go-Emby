@@ -26,7 +26,7 @@ import (
 	"github.com/syscc/Emby-Go/internal/webui"
 )
 
-var ginMode = gin.DebugMode
+var ginMode = gin.ReleaseMode
 
 func main() {
 	go func() { http.ListenAndServe(":60360", nil) }()
@@ -47,6 +47,7 @@ func main() {
 	// Load env files
 	loadEnv()
 	setLocalTZ()
+	gin.SetMode(ginMode)
 
 	// Apply env vars if flags are default
 	if *wp == 8090 {
@@ -127,7 +128,6 @@ func main() {
 		}
 
 		logs.Info("正在启动服务...")
-		gin.SetMode(ginMode)
 		if err := web.Listen(); err != nil {
 			log.Fatal(colors.ToRed(err.Error()))
 		}
@@ -185,14 +185,15 @@ func setLocalTZ() {
 
 func setupLogHook(logDir, prefix string) {
 	logs.OutputHook = func(level, msg string) {
-		day := time.Now().Format("2006-01-02")
+		t := time.Now().In(time.Local)
+		day := t.Format("2006-01-02")
 		fp := filepath.Join(logDir, fmt.Sprintf("%s_%s.log", prefix, day))
 		f, err := os.OpenFile(fp, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 		if err != nil {
 			return
 		}
 		defer f.Close()
-		line := fmt.Sprintf("%s\t%s\t%s\n", time.Now().Format("2006/01/02 15:04:05"), level, msg)
+		line := fmt.Sprintf("%s\t%s\t%s\n", t.Format("2006/01/02 15:04:05"), level, msg)
 		_, _ = f.WriteString(line)
 	}
 }
