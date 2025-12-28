@@ -1,0 +1,28 @@
+name: Create GitHub Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build release notes
+        id: notes
+        run: |
+          TAG="${GITHUB_REF##*/}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          TITLE="Go-Emby ${TAG}"
+          NOTES_FILE="NOTES.md"
+          echo "${TITLE}" > "${NOTES_FILE}"
+          if [ -f CHANGELOG.md ]; then
+            awk "/^## ${TAG}/{flag=1; next} /^##/{flag=0} flag" CHANGELOG.md >> "${NOTES_FILE}" || true
+          fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.notes.outputs.tag }}
+          name: Go-Emby ${{ steps.notes.outputs.tag }}
+          body_path: NOTES.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
