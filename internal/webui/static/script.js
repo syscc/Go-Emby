@@ -509,7 +509,7 @@ async function fetchLogs() {
     if (logsCutoffMsgMs !== null) {
         logs = logs.filter(l => {
             const ms = parseMsgTimeMs(l.Message);
-            return ms !== null && ms > logsCutoffMsgMs;
+            return ms !== null && ms >= (logsCutoffMsgMs - LOGS_CUTOFF_FUDGE_MS);
         });
     }
 
@@ -542,10 +542,13 @@ function clearLogs() {
     if (tbody) tbody.innerHTML = '';
     // Use current time as cutoff so historical lines won't be shown on next refresh
     logsCutoffMsgMs = Date.now();
+    // Immediately fetch once to reduce perceived lag
+    fetchLogs();
 }
 let logsAutoTimer = null;
 let logsAutoMs = 3000;
 let logsCutoffMsgMs = null;
+const LOGS_CUTOFF_FUDGE_MS = 2000;
 function startLogsAutoRefresh() {
     if (logsAutoTimer) clearInterval(logsAutoTimer);
     logsAutoTimer = setInterval(fetchLogs, logsAutoMs);
