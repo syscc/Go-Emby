@@ -46,6 +46,7 @@ func main() {
 
 	// Load env files
 	loadEnv()
+	setLocalTZ()
 
 	// Apply env vars if flags are default
 	if *wp == 8090 {
@@ -165,6 +166,20 @@ func main() {
 
 		// Block forever
 		select {}
+	}
+}
+
+func setLocalTZ() {
+	tz := os.Getenv("TZ")
+	if tz == "" {
+		return
+	}
+	if loc, err := time.LoadLocation(tz); err == nil && loc != nil {
+		time.Local = loc
+		return
+	}
+	if strings.EqualFold(tz, "Asia/Shanghai") || strings.EqualFold(tz, "CST") {
+		time.Local = time.FixedZone("CST", 8*3600)
 	}
 }
 
