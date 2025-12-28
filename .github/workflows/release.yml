@@ -8,11 +8,22 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
+      - name: Validate version constant equals tag
+        run: |
+          set -e
+          VERSION=$(awk -F'"' '/CurrentVersion/{print $2}' internal/constant/constant.go)
+          echo "Detected version in code: ${VERSION}, tag: ${TAG}"
+          if [ "${VERSION}" != "${TAG}" ]; then
+            echo "Version mismatch: code=${VERSION}, tag=${TAG}"
+            exit 1
+          fi
       - name: Build binaries
         run: |
           set -e
@@ -25,7 +36,7 @@ jobs:
               if [ "$GOOS" = "windows" ]; then
                 EXT=".exe"
               fi
-              OUT="dist/${BIN}_${GOOS}_${GOARCH}${EXT}"
+              OUT="dist/${BIN}_${TAG}_${GOOS}_${GOARCH}${EXT}"
               GOOS=$GOOS GOARCH=$GOARCH go build -trimpath -o "$OUT" .
             done
           done
@@ -33,18 +44,19 @@ jobs:
         run: |
           set -e
           cd dist
+          cp ../README.md . 2>/dev/null || true
+          cp ../LICENSE . 2>/dev/null || true
           for f in go-emby_*; do
             if echo "$f" | grep -qE '\.exe$'; then
-              zip "${f%.exe}.zip" "$f"
+              zip "${f%.exe}.zip" "$f" README.md LICENSE 2>/dev/null || zip "${f%.exe}.zip" "$f" README.md 2>/dev/null || zip "${f%.exe}.zip" "$f"
             else
-              tar -czf "${f}.tar.gz" "$f"
+              tar -czf "${f}.tar.gz" "$f" README.md LICENSE 2>/dev/null || tar -czf "${f}.tar.gz" "$f" README.md 2>/dev/null || tar -czf "${f}.tar.gz" "$f"
             fi
           done
           sha256sum * > SHA256SUMS.txt
       - name: Build release notes
         id: notes
         run: |
-          TAG="${GITHUB_REF##*/}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           TITLE="Go-Emby ${TAG}"
           NOTES_FILE="NOTES.md"
@@ -55,6 +67,12 @@ jobs:
           if ! grep -q "." "${NOTES_FILE}"; then
             echo "" >> "${NOTES_FILE}"
             echo "发布说明请查看 CHANGELOG.md。" >> "${NOTES_FILE}"
+            PREV=$(git tag --sort=-creatordate | grep -v "^${TAG}\$" | head -n1 || true)
+            if [ -n "$PREV" ]; then
+              echo "" >> "${NOTES_FILE}"
+              echo "自 ${PREV} 以来的变更：" >> "${NOTES_FILE}"
+              git log --oneline "${PREV}..HEAD" >> "${NOTES_FILE}" || true
+            fi
           fi
       - uses: softprops/action-gh-release@v2
         with:
