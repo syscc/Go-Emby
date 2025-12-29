@@ -16,12 +16,33 @@ import (
 	"github.com/syscc/Emby-Go/internal/manager"
 )
 
+func trustedProxies() []string {
+	val := strings.TrimSpace(os.Getenv("trusted_proxies"))
+	if val != "" {
+		parts := strings.Split(val, ",")
+		out := make([]string, 0, len(parts))
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				out = append(out, p)
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	}
+	return []string{
+		"127.0.0.1/32", "::1/128",
+		"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+	}
+}
+
 //go:embed static/*
 var staticFS embed.FS
 
 func Start(port int) {
 	r := gin.Default()
-	_ = r.SetTrustedProxies(nil)
+	_ = r.SetTrustedProxies(trustedProxies())
 
 	api := r.Group("/api")
 	{

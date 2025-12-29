@@ -65,8 +65,36 @@ func ProxyOrigin(c *gin.Context) {
 	origin := config.C.Emby.Host
 
 	// 传递客户端 IP 到 emby
-	c.Request.Header.Set("X-Forwarded-For", c.ClientIP())
-	c.Request.Header.Set("X-Real-IP", c.ClientIP())
+	origXFF := strings.TrimSpace(c.Request.Header.Get("X-Forwarded-For"))
+	origReal := strings.TrimSpace(c.Request.Header.Get("X-Real-IP"))
+	real := origReal
+	if real == "" && origXFF != "" {
+		if i := strings.Index(origXFF, ","); i > 0 {
+			real = strings.TrimSpace(origXFF[:i])
+		} else {
+			real = origXFF
+		}
+	}
+	// 仅在缺失时补充，不覆盖上游头
+	if real != "" {
+		c.Request.Header.Set("X-Emby-Client-IP", real)
+	}
+	if origXFF == "" && real != "" {
+		c.Request.Header.Set("X-Forwarded-For", real)
+	}
+	if origReal == "" && real != "" {
+		c.Request.Header.Set("X-Real-IP", real)
+	}
+	// 传递协议与主机，辅助上游识别真实来源
+	if c.Request.TLS != nil {
+		c.Request.Header.Set("X-Forwarded-Proto", "https")
+	} else {
+		c.Request.Header.Set("X-Forwarded-Proto", "http")
+	}
+	if h := c.Request.Host; h != "" {
+		c.Request.Header.Set("X-Forwarded-Host", h)
+	}
+	logs.Info("IPForward xff=%s xreal=%s client=%s host=%s uri=%s", c.Request.Header.Get("X-Forwarded-For"), c.Request.Header.Get("X-Real-IP"), c.ClientIP(), c.Request.Host, c.Request.RequestURI)
 
 	if err := https.ProxyPass(c.Request, c.Writer, origin); err != nil {
 		logs.Error("代理异常: %v", err)
