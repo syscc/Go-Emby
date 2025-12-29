@@ -47,6 +47,7 @@ jobs:
       - name: Build binaries
         run: |
           set -e
+          TAG="${GITHUB_REF_NAME}"
           mkdir -p dist
           export CGO_ENABLED=0
           for GOOS in linux windows darwin; do
@@ -64,13 +65,11 @@ jobs:
         run: |
           set -e
           cd dist
-          cp ../README.md . 2>/dev/null || true
-          cp ../LICENSE . 2>/dev/null || true
           for f in go-emby_*; do
             if echo "$f" | grep -qE '\.exe$'; then
-              zip "${f%.exe}.zip" "$f" README.md LICENSE 2>/dev/null || zip "${f%.exe}.zip" "$f" README.md 2>/dev/null || zip "${f%.exe}.zip" "$f"
+              zip "${f%.exe}.zip" "$f"
             else
-              tar -czf "${f}.tar.gz" "$f" README.md LICENSE 2>/dev/null || tar -czf "${f}.tar.gz" "$f" README.md 2>/dev/null || tar -czf "${f}.tar.gz" "$f"
+              tar -czf "${f}.tar.gz" "$f"
             fi
           done
           sha256sum * > SHA256SUMS.txt
