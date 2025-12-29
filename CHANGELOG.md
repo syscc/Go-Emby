@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.6
+- 修复：转发到 Emby 时保留上游 X-Forwarded-For 链并追加当前客户端 IP；X-Real-IP 取链首，恢复通知/播放日志显示公网或 CDN IP
+
 ## v0.0.5
 - 修复：WebUI 日志时间解析按本地时区（ParseInLocation + time.Local），与容器 TZ 保持一致
 - CI：GitHub Actions 赋予 contents: write 权限，推送 v* 标签自动创建 Release，避免 403
