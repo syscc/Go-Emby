@@ -3,45 +3,35 @@ permissions:
   contents: write
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 jobs:
   release:
     runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
-      - name: Setup tag variables
-        id: vars
+      - name: Sync main to tag commit
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -e
-          REF="${GITHUB_REF}"
-          if echo "$REF" | grep -q '^refs/tags/'; then
-            TAG="${REF##*/}"
-            IS_TAG="true"
-            TARGET_COMMITISH=""
-          else
-            TAG=$(awk -F'"' '/CurrentVersion/{print $2}' internal/constant/constant.go)
-            IS_TAG="false"
-            TARGET_COMMITISH="main"
-          fi
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "is_tag=${IS_TAG}" >> "$GITHUB_OUTPUT"
-          echo "target_commitish=${TARGET_COMMITISH}" >> "$GITHUB_OUTPUT"
-          echo "TAG=${TAG}" >> "$GITHUB_ENV"
-          echo "TARGET_COMMITISH=${TARGET_COMMITISH}" >> "$GITHUB_ENV"
-          echo "IS_TAG=${IS_TAG}" >> "$GITHUB_ENV"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push origin HEAD:refs/heads/main
       - name: Validate version constant equals tag
-        if: ${{ steps.vars.outputs.is_tag == 'true' }}
         run: |
           set -e
           VERSION=$(awk -F'"' '/CurrentVersion/{print $2}' internal/constant/constant.go)
-          echo "Detected version in code: ${VERSION}, tag: ${{ steps.vars.outputs.tag }}"
-          if [ "${VERSION}" != "${{ steps.vars.outputs.tag }}" ]; then
+          TAG="${GITHUB_REF_NAME}"
+          echo "Detected version in code: ${VERSION}, tag: ${TAG}"
+          if [ "${VERSION}" != "${TAG}" ]; then
             echo "Version mismatch: code=${VERSION}, tag=${TAG}"
             exit 1
           fi
@@ -75,11 +65,23 @@ jobs:
             fi
           done
           sha256sum * > SHA256SUMS.txt
+      - name: Build and push Docker images
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/386,linux/arm/v7,linux/amd64,linux/arm64
+          push: true
+          tags: |
+            syscc/go-emby:${{ github.ref_name }}
+            syscc/go-emby:latest
+        env:
+          DOCKER_BUILDKIT: "1"
+        # login is implicit for public registry; if needed add docker/login-action
       - name: Build release notes
         id: notes
-        env:
-          TAG: ${{ steps.vars.outputs.tag }}
         run: |
+          TAG="${GITHUB_REF_NAME}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           TITLE="Go-Emby ${TAG}"
           NOTES_FILE="NOTES.md"
@@ -104,6 +106,5 @@ jobs:
           body_path: NOTES.md
           files: |
             dist/**
-          target_commitish: ${{ steps.vars.outputs.target_commitish }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

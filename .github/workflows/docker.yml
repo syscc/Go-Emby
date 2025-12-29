@@ -1,11 +1,7 @@
-name: Build and Push Docker Images
+name: Build and Push Docker Images (manual)
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,23 +22,11 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Build and push latest on branch
-        if: ${{ github.ref_type == 'branch' }}
+      - name: Build and push latest
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/386,linux/arm/v7,linux/amd64,linux/arm64
           push: true
           tags: |
-            syscc/go-emby:latest
-
-      - name: Build and push version + latest on tag
-        if: ${{ github.ref_type == 'tag' }}
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/386,linux/arm/v7,linux/amd64,linux/arm64
-          push: true
-          tags: |
-            syscc/go-emby:${{ github.ref_name }}
             syscc/go-emby:latest
