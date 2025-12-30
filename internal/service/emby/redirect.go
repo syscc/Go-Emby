@@ -328,7 +328,7 @@ func getFinalRedirectLink(originLink string, header http.Header) string {
 		}
 		finalLink = fl
 		return nil
-	}, 5, time.Second*2)
+	}, 3, time.Second*1)
 
 	if err != nil {
 		_ = trys.Try(func() (err error) {
@@ -341,7 +341,7 @@ func getFinalRedirectLink(originLink string, header http.Header) string {
 			}
 			finalLink = fl
 			return nil
-		}, 3, time.Second*2)
+		}, 2, time.Second*1)
 	}
 
 	if finalLink == "" {
