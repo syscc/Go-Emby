@@ -55,7 +55,7 @@ const translations = {
         cancel: "Cancel",
         clear: "Clear",
         deleteConfirm: "Are you sure you want to delete this server?",
-        port: "Go Emby Port",
+        port: "Go-Emby Port",
         mountPath: "Mount Path",
         mountPathDesc: "Multiple paths supported, separate by , or ;",
         localMediaRoot: "Local Media Root",
@@ -80,7 +80,7 @@ const translations = {
         dbInit: "Initializing...",
         success: "Success",
         setupComplete: "Setup complete. Please login.",
-        appTitle: "Go Emby",
+        appTitle: "Go-Emby",
         projectAddress: "Project Address (GitHub)"
     },
     zh: {
@@ -136,7 +136,7 @@ const translations = {
         cancel: "取消",
         clear: "清空",
         deleteConfirm: "确定要删除此服务器吗？",
-        port: "Go Emby 端口",
+        port: "Go-Emby 端口",
         mountPath: "挂载路径",
         mountPathDesc: "支持多个路径，使用逗号或分号分隔",
         localMediaRoot: "本地媒体根路径",
@@ -161,7 +161,7 @@ const translations = {
         dbInit: "初始化中...",
         success: "成功",
         setupComplete: "设置完成，请登录。",
-        appTitle: "Go Emby",
+        appTitle: "Go-Emby",
         projectAddress: "项目地址 (GitHub)"
     }
 };

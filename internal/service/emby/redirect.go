@@ -319,20 +319,33 @@ func getFinalRedirectLink(originLink string, header http.Header) string {
 
 	var finalLink string
 	err := trys.Try(func() (err error) {
-		logs.Info("正在尝试内部重定向, originLink: [%s]", originLink)
-		fl, resp, e := https.Get(originLink).Header(header).DoRedirect()
+		fl, resp, e := https.Head(originLink).Header(header).DoRedirect()
 		if e != nil {
 			return e
 		}
-		defer resp.Body.Close()
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
 		finalLink = fl
 		return nil
-	}, 3, time.Second*2)
+	}, 5, time.Second*2)
 
 	if err != nil {
-		logs.Warn("内部重定向失败: %v", err)
-		return originLink
+		_ = trys.Try(func() (err error) {
+			fl, resp, e := https.Get(originLink).Header(header).DoRedirect()
+			if e != nil {
+				return e
+			}
+			if resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
+			finalLink = fl
+			return nil
+		}, 3, time.Second*2)
 	}
 
+	if finalLink == "" {
+		return originLink
+	}
 	return finalLink
 }

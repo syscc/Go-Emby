@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.7
+- WebUI：品牌名统一为 “Go-Emby”（标题、侧边栏、文案）
+- STRM：内部重定向优先使用 HEAD（5 次，2s 间隔），失败回退 GET（3 次，2s 间隔），兜底保留原始链接；不影响缓存逻辑
+- CI：发布附件不再包含 README/LICENSE，仅保留版本化二进制与校验文件
+
 ## v0.0.6
 - 修复：转发到 Emby 时保留上游 X-Forwarded-For 链并追加当前客户端 IP；X-Real-IP 取链首，恢复通知/播放日志显示公网或 CDN IP
 
