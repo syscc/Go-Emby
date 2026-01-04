@@ -53,6 +53,7 @@
                     </li>
                     <li data-target="config-page"><i class="fa-solid fa-file-lines"></i> <span data-t="configFile">Config</span>
                     </li>
+                    <li data-target="notify-page"><i class="fa-solid fa-bell"></i> <span data-t="notification">Notifications</span></li>
                     <li data-target="users-page"><i class="fa-solid fa-users-gear"></i> <span data-t="users">User
                             Management</span></li>
                 </ul>
@@ -270,6 +271,16 @@
                     </div>
                 </div>
 
+                <!-- Notifications Page -->
+                <div id="notify-page" class="page">
+                    <div class="page-header">
+                        <h2 data-t="notification">Notifications</h2>
+                        <button id="notify-add" class="btn btn-primary" onclick="showNotifyModal()"><i class="fa-solid fa-plus"></i>
+                            <span data-t="add">Add</span></button>
+                    </div>
+                    <div id="notify-list" class="grid-list"></div>
+                </div>
+
                 <!-- User Management Page -->
                 <div id="users-page" class="page">
                     <div class="page-header">
@@ -363,6 +374,62 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="closeServerModal()"
                             data-t="cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary" data-t="save">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Notify Modal -->
+        <div id="notify-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 data-t="notification">Notifications</h3>
+                    <span class="close" onclick="closeNotifyModal()">&times;</span>
+                </div>
+                <form id="notify-form">
+                    <input type="hidden" id="nm-id" />
+                    <div class="form-group">
+                        <label data-t="notifyName">Name</label>
+                        <input type="text" id="nm-name" placeholder="Webhook" />
+                    </div>
+                    <div class="form-group">
+                        <label data-t="notifyEnable">Enable</label>
+                        <input type="checkbox" id="nm-enable" />
+                    </div>
+                    <div class="form-group">
+                        <label>方式</label>
+                        <input type="text" value="webhook" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label data-t="notifyUrl">Request URL</label>
+                        <input type="text" id="nm-url" placeholder="https://..." required />
+                    </div>
+                    <div class="form-group">
+                        <label data-t="notifyMethod">Request Method</label>
+                        <select id="nm-method">
+                            <option value="POST">POST</option>
+                            <option value="GET">GET</option>
+                            <option value="PUT">PUT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-t="notifyContentType">Body Content-Type</label>
+                        <select id="nm-ct">
+                            <option value="application/json">application/json</option>
+                            <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-t="notifyTitleKey">Title param name</label>
+                        <input type="text" id="nm-title" placeholder="title" />
+                    </div>
+                    <div class="form-group">
+                        <label data-t="notifyContentKey">Content param name</label>
+                        <input type="text" id="nm-content" placeholder="text" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeNotifyModal()" data-t="cancel">Cancel</button>
+                        <button type="button" class="btn btn-secondary" onclick="testNotifyModal()" data-t="test">Test</button>
                         <button type="submit" class="btn btn-primary" data-t="save">Save</button>
                     </div>
                 </form>

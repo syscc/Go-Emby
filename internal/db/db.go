@@ -22,6 +22,19 @@ type User struct {
 	Password string
 }
 
+type Notify struct {
+ 	ID           uint      `gorm:"primaryKey" json:"ID"`
+	Name         string    `json:"Name"`
+ 	Enable       bool      `json:"Enable"`
+ 	Url          string    `json:"Url"`
+ 	Method       string    `json:"Method"`
+ 	ContentType  string    `json:"ContentType"`
+ 	TitleKey     string    `json:"TitleKey"`
+ 	ContentKey   string    `json:"ContentKey"`
+ 	CreatedAt    time.Time `json:"CreatedAt"`
+ 	UpdatedAt    time.Time `json:"UpdatedAt"`
+ }
+
 type EmbyServer struct {
 	ID                     uint   `gorm:"primaryKey" json:"ID"`
 	Name                   string `gorm:"uniqueIndex" json:"Name"`
@@ -69,6 +82,12 @@ type GlobalConfig struct {
 	SslSinglePort                 bool
 	SslKey                        string
 	SslCrt                        string
+	NotifyEnable                  bool
+	NotifyUrl                     string
+	NotifyMethod                  string
+	NotifyContentType             string
+	NotifyTitleKey                string
+	NotifyContentKey              string
 }
 
 func Init(path string) error {
@@ -78,7 +97,7 @@ func Init(path string) error {
 		return err
 	}
 
-	if err := DB.AutoMigrate(&User{}, &EmbyServer{}, &GlobalConfig{}); err != nil {
+	if err := DB.AutoMigrate(&User{}, &EmbyServer{}, &GlobalConfig{}, &Notify{}); err != nil {
 		return err
 	}
 	return ensureGlobalDefaults()
@@ -143,6 +162,26 @@ func UpdatePassword(username, newPassword string) error {
 	return DB.Save(&user).Error
 }
 
+func GetNotifies() ([]Notify, error) {
+	var list []Notify
+	if err := DB.Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func AddNotify(n *Notify) error {
+	return DB.Create(n).Error
+}
+
+func UpdateNotify(n *Notify) error {
+	return DB.Save(n).Error
+}
+
+func DeleteNotify(id uint) error {
+	return DB.Delete(&Notify{}, id).Error
+}
+
 func hashMD5(s string) string {
 	sum := md5.Sum([]byte(s))
 	return hex.EncodeToString(sum[:])
@@ -171,6 +210,12 @@ func ensureGlobalDefaults() error {
 			VideoPreviewIgnoreTemplateIds: "LD,SD",
 			PathEmby2Openlist:             "/movie:/电影\n/music:/音乐\n/show:/综艺\n/series:/电视剧\n/sport:/运动\n/animation:/动漫",
 			LogDisableColor:               true,
+			NotifyEnable:                  false,
+			NotifyUrl:                     "",
+			NotifyMethod:                  "POST",
+			NotifyContentType:             "application/json",
+			NotifyTitleKey:                "title",
+			NotifyContentKey:              "text",
 		}).Error
 	}
 	var m map[string]any
@@ -212,6 +257,12 @@ func ensureGlobalDefaults() error {
 		SslSinglePort:                 boolVal(ssl, "single-port", false),
 		SslKey:                        strVal(ssl, "key", ""),
 		SslCrt:                        strVal(ssl, "crt", ""),
+		NotifyEnable:                  false,
+		NotifyUrl:                     "",
+		NotifyMethod:                  "POST",
+		NotifyContentType:             "application/json",
+		NotifyTitleKey:                "title",
+		NotifyContentKey:              "text",
 	}
 	return DB.Create(&g).Error
 }

@@ -159,6 +159,7 @@ func main() {
 		if err := manager.LoadAll(); err != nil {
 			log.Printf("Load proxies failed: %v", err)
 		}
+		manager.StartHealthMonitor()
 
 		// Start WebUI
 		logs.Info("正在启动 WebUI 管理后台...")

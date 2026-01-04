@@ -97,6 +97,9 @@ func ProxyOrigin(c *gin.Context) {
 
 	if err := https.ProxyPass(c.Request, c.Writer, origin); err != nil {
 		logs.Error("代理异常: %v", err)
+		c.Status(http.StatusBadGateway)
+		c.String(http.StatusBadGateway, "Proxy error")
+		return
 	}
 }
 

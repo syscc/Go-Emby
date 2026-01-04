@@ -12,6 +12,7 @@ const translations = {
         servers: "Emby Media Servers",
         addServer: "Add Emby Media Server",
         editServer: "Edit Emby Media Server",
+        add: "Add",
         logs: "Logs",
         users: "User Management",
         configFile: "Config File",
@@ -162,7 +163,17 @@ const translations = {
         success: "成功",
         setupComplete: "设置完成，请登录。",
         appTitle: "Go-Emby",
-        projectAddress: "项目地址 (GitHub)"
+        projectAddress: "项目地址 (GitHub)",
+        notification: "通知配置",
+        add: "新增",
+        notifyName: "通知名称",
+        test: "测试",
+        notifyEnable: "是否启用",
+        notifyUrl: "请求地址",
+        notifyMethod: "请求方法",
+        notifyContentType: "请求体类型",
+        notifyTitleKey: "标题参数名",
+        notifyContentKey: "内容参数名"
     }
 };
 
@@ -306,6 +317,7 @@ function showDashboard() {
     authScreen.classList.add('hidden');
     dashboard.classList.remove('hidden');
     loadServers();
+    loadNotifies();
 }
 
 // Navigation
@@ -329,6 +341,9 @@ menuItems.forEach(item => {
         if (target === 'config-page') {
             loadGlobalConfig();
         }
+        if (target === 'notify-page') {
+            loadNotifies();
+        }
     });
 });
 
@@ -343,6 +358,124 @@ async function loadServers() {
         console.error(e);
     }
 }
+
+// Notifications
+async function loadNotifies() {
+    try {
+        const res = await fetchAuthenticated(`${API_BASE}/notifications`);
+        if (!res) return;
+        const list = await res.json();
+        renderNotifies(list);
+    } catch (e) {
+        renderNotifies([]);
+    }
+}
+function renderNotifies(list) {
+    const container = document.getElementById('notify-list');
+    if (!container) return;
+    container.innerHTML = '';
+    (list || []).forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'card server-card';
+        card.innerHTML = `
+            <h3>${n.Name || 'Webhook'} (${n.Enable ? 'ON' : 'OFF'})</h3>
+            <div class="server-info"><i class="fa-solid fa-link"></i> ${n.Url || '-'}</div>
+            <div class="server-info">CT: ${n.ContentType || 'application/json'} | Keys: ${n.TitleKey || 'title'} / ${n.ContentKey || 'text'}</div>
+            <div class="server-actions">
+                <button class="btn btn-sm btn-secondary" onclick="editNotify(${n.ID})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteNotify(${n.ID})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Notification Modal
+async function showNotifyModal() {
+    const m = document.getElementById('notify-modal');
+    try {
+        document.getElementById('nm-id').value = '';
+        document.getElementById('nm-name').value = '';
+        document.getElementById('nm-enable').checked = false;
+        document.getElementById('nm-url').value = '';
+        document.getElementById('nm-method').value = 'POST';
+        document.getElementById('nm-ct').value = 'application/json';
+        document.getElementById('nm-title').value = 'title';
+        document.getElementById('nm-content').value = 'text';
+    } catch (e) {
+        document.getElementById('nm-name').value = '';
+        document.getElementById('nm-enable').checked = false;
+        document.getElementById('nm-url').value = '';
+        document.getElementById('nm-method').value = 'POST';
+        document.getElementById('nm-ct').value = 'application/json';
+        document.getElementById('nm-title').value = 'title';
+        document.getElementById('nm-content').value = 'text';
+    }
+    m.classList.remove('hidden');
+}
+function closeNotifyModal() {
+    document.getElementById('notify-modal').classList.add('hidden');
+}
+document.getElementById('notify-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await saveNotifyConfigModal();
+});
+async function saveNotifyConfigModal() {
+    try {
+        const body = {
+            ID: parseInt(document.getElementById('nm-id').value || '0'),
+            Name: document.getElementById('nm-name').value.trim() || 'Webhook',
+            Enable: document.getElementById('nm-enable').checked,
+            Url: document.getElementById('nm-url').value.trim(),
+            Method: document.getElementById('nm-method').value,
+            ContentType: document.getElementById('nm-ct').value,
+            TitleKey: document.getElementById('nm-title').value.trim() || 'title',
+            ContentKey: document.getElementById('nm-content').value.trim() || 'text',
+        };
+        const isEdit = body.ID > 0;
+        const url = isEdit ? `${API_BASE}/notifications/${body.ID}` : `${API_BASE}/notifications`;
+        const method = isEdit ? 'PUT' : 'POST';
+        const res = await fetchAuthenticated(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+        if (res && res.ok) {
+            closeNotifyModal();
+            loadNotifies();
+            alert(t('success'));
+        }
+    } catch (e) {}
+}
+async function testNotifyModal() {
+    try {
+        const url = (document.getElementById('nm-url').value || '').trim();
+        const enable = document.getElementById('nm-enable').checked;
+        if (!enable || !url) {
+            alert(t('networkError'));
+            return;
+        }
+        const body = {
+            Enable: enable,
+            Url: url,
+            Method: document.getElementById('nm-method').value,
+            ContentType: document.getElementById('nm-ct').value,
+            TitleKey: document.getElementById('nm-title').value.trim() || 'title',
+            ContentKey: document.getElementById('nm-content').value.trim() || 'text',
+        };
+        const res = await fetchAuthenticated(`${API_BASE}/notifications/test`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body),
+        });
+        if (res && res.ok) {
+            alert(t('success'));
+        } else {
+            alert(t('networkError'));
+        }
+    } catch (e) {}
+}
+
+// expose to inline onclick
+window.showNotifyModal = showNotifyModal;
+window.closeNotifyModal = closeNotifyModal;
+window.testNotifyModal = testNotifyModal;
 
 function renderServers() {
     const list = document.getElementById('servers-list');
@@ -439,6 +572,36 @@ document.getElementById('server-form').addEventListener('submit', async (e) => {
         loadServers();
     }
 });
+
+document.getElementById('notify-add')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    try { showNotifyModal(); } catch (_) {}
+});
+window.editNotify = async (id) => {
+    try {
+        const res = await fetchAuthenticated(`${API_BASE}/notifications`);
+        if (!res) return;
+        const list = await res.json();
+        const n = (list || []).find(x => x.ID === id);
+        if (!n) return;
+        document.getElementById('nm-id').value = n.ID;
+        document.getElementById('nm-name').value = n.Name || 'Webhook';
+        document.getElementById('nm-enable').checked = !!n.Enable;
+        document.getElementById('nm-url').value = n.Url || '';
+        document.getElementById('nm-method').value = n.Method || 'POST';
+        document.getElementById('nm-ct').value = n.ContentType || 'application/json';
+        document.getElementById('nm-title').value = n.TitleKey || 'title';
+        document.getElementById('nm-content').value = n.ContentKey || 'text';
+        document.getElementById('notify-modal').classList.remove('hidden');
+    } catch (e) {}
+};
+window.deleteNotify = async (id) => {
+    if (!confirm(t('deleteConfirm'))) return;
+    const res = await fetchAuthenticated(`${API_BASE}/notifications/${id}`, { method: 'DELETE' });
+    if (res && res.ok) {
+        loadNotifies();
+    }
+};
 
 // Logs
 async function fetchLogs() {
