@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	stdpath "path"
 	"github.com/syscc/Emby-Go/internal/config"
 	"github.com/syscc/Emby-Go/internal/service/openlist"
 	"github.com/syscc/Emby-Go/internal/service/path"
@@ -150,8 +151,13 @@ func Redirect2OpenlistLink(c *gin.Context) {
 			durationStr = "10m"
 		}
 
-		logs.Success("重定向 strm(缓存%s): %s", durationStr, finalPath)
-		c.Header(cache.HeaderKeyExpired, cache.Duration(duration))
+		if isCacheIgnored(finalPath) {
+			logs.Success("重定向 strm(忽略缓存): %s", finalPath)
+			c.Header(cache.HeaderKeyExpired, "-1")
+		} else {
+			logs.Success("重定向 strm(缓存%s): %s", durationStr, finalPath)
+			c.Header(cache.HeaderKeyExpired, cache.Duration(duration))
+		}
 		c.Redirect(http.StatusFound, finalPath)
 
 		// 异步发送一个播放 Playback 请求, 触发 emby 解析 strm 视频格式
@@ -223,8 +229,13 @@ func Redirect2OpenlistLink(c *gin.Context) {
 				durationStr = "10m"
 			}
 
-			logs.Success("直链缓存(%s): %s", durationStr, res.Data.Url)
-			c.Header(cache.HeaderKeyExpired, cache.Duration(duration))
+			if isCacheIgnored(res.Data.Url) {
+				logs.Success("直链缓存(忽略缓存): %s", res.Data.Url)
+				c.Header(cache.HeaderKeyExpired, "-1")
+			} else {
+				logs.Success("直链缓存(%s): %s", durationStr, res.Data.Url)
+				c.Header(cache.HeaderKeyExpired, cache.Duration(duration))
+			}
 			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
 			return true
 		}
@@ -348,4 +359,29 @@ func getFinalRedirectLink(originLink string, header http.Header) string {
 		return originLink
 	}
 	return finalLink
+}
+
+func isCacheIgnored(u string) bool {
+	domain := u
+	if parsed, err := url.Parse(u); err == nil {
+		domain = parsed.Hostname()
+	}
+	for _, pattern := range config.C.Emby.DlCacheIgnore {
+		p := strings.TrimSpace(pattern)
+		if p == "" {
+			continue
+		}
+		// 关键字匹配：无通配符时按子串匹配（域名部分）
+		if !strings.ContainsAny(p, "*?") {
+			if strings.Contains(strings.ToLower(domain), strings.ToLower(p)) {
+				return true
+			}
+			continue
+		}
+		// 通配符匹配：glob 到 hostname
+		if ok, _ := stdpath.Match(p, domain); ok {
+			return true
+		}
+	}
+	return false
 }

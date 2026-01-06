@@ -63,6 +63,8 @@ const translations = {
         localMediaRootDesc: "Files starting with this path will bypass proxy; Multiple paths supported, separate by , or ;",
         dlCacheValue: "Direct Link Cache",
         dlCacheUnit: "Unit",
+        dlCacheIgnore: "Ignore Cache Domains",
+        dlCacheIgnoreDesc: "Support multiple domains or wildcards; one per line",
         serverName: "Server Name",
         internalRedirect: "Enable Internal Redirect",
         disableProxy: "Disable Proxy (Config Only)",
@@ -144,6 +146,8 @@ const translations = {
         localMediaRootDesc: "以此路径开头的文件将绕过代理直连播放；支持多个路径，使用逗号或分号分隔",
         dlCacheValue: "直链缓存时间",
         dlCacheUnit: "单位",
+        dlCacheIgnore: "忽略缓存域名",
+        dlCacheIgnoreDesc: "支持多个域名或通配符（如 *.115cdn.*），也可填写关键字（如 115）；仅匹配域名部分；每行一个",
         serverName: "服务器名称",
         internalRedirect: "开启内部重定向",
         disableProxy: "禁用代理 (仅保留配置)",
@@ -520,11 +524,13 @@ function showServerModal(id = null) {
             const dl = s.DirectLinkCacheExpired || '10m';
             document.getElementById('server-dl-cache-value').value = parseInt(dl) || 10;
             document.getElementById('server-dl-cache-unit').value = dl.replace(/\d+/,'') || 'm';
+            document.getElementById('server-dl-cache-ignore').value = s.DirectLinkCacheIgnore || '';
         }
     } else {
         document.getElementById('modal-title').textContent = t('addServer');
         form.reset();
         document.getElementById('server-id').value = '';
+        document.getElementById('server-dl-cache-ignore').value = '';
         // Explicitly set checkboxes to false
         document.getElementById('server-internal-redirect').checked = false;
     }
@@ -555,6 +561,7 @@ document.getElementById('server-form').addEventListener('submit', async (e) => {
         OpenlistToken: document.getElementById('server-openlist-token').value,
         InternalRedirectEnable: document.getElementById('server-internal-redirect').checked,
         DirectLinkCacheExpired: `${document.getElementById('server-dl-cache-value').value}${document.getElementById('server-dl-cache-unit').value}`,
+        DirectLinkCacheIgnore: document.getElementById('server-dl-cache-ignore').value,
         DisableProxy: false
     };
 

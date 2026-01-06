@@ -47,6 +47,7 @@ type EmbyServer struct {
 	OpenlistToken          string `json:"OpenlistToken"`
 	InternalRedirectEnable bool   `json:"InternalRedirectEnable"`
 	DirectLinkCacheExpired string `json:"DirectLinkCacheExpired"`
+	DirectLinkCacheIgnore  string `json:"DirectLinkCacheIgnore"`
 	DisableProxy           bool   `json:"DisableProxy"` // If true, only serve as config holder, don't start proxy
 	CreatedAt              time.Time
 	UpdatedAt              time.Time

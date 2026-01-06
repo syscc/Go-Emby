@@ -66,6 +66,9 @@ func writeConfig(_ string, s db.EmbyServer) (string, error) {
 	if s.DirectLinkCacheExpired != "" {
 		emby["dl-cache-time"] = s.DirectLinkCacheExpired
 	}
+	if s.DirectLinkCacheIgnore != "" {
+		emby["dl-cache-ignore"] = splitMounts(s.DirectLinkCacheIgnore)
+	}
 
 	// Strm Config
 	strm["internal-redirect-enable"] = s.InternalRedirectEnable
@@ -164,7 +167,7 @@ func getMap(m map[string]any, k string) map[string]any {
 
 func splitMounts(s string) []string {
 	arr := strings.FieldsFunc(s, func(r rune) bool {
-		return r == ',' || r == ';'
+		return r == ',' || r == ';' || r == '\n' || r == '\r'
 	})
 	out := make([]string, 0, len(arr))
 	for _, e := range arr {

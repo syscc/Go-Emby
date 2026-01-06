@@ -60,6 +60,8 @@ type Emby struct {
 	LocalMediaRoot string `yaml:"local-media-root"`
 	// DlCacheTime 直链缓存时间
 	DlCacheTime string `yaml:"dl-cache-time"`
+	// DlCacheIgnore 直链缓存忽略域名 (支持通配符或关键字)
+	DlCacheIgnore []string `yaml:"dl-cache-ignore"`
 }
 
 func (e *Emby) Init() error {
