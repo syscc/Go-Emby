@@ -416,6 +416,7 @@ func Start(port int) {
 	// Static files
 	sub, _ := fs.Sub(staticFS, "static")
 	r.NoRoute(gin.WrapH(http.FileServer(http.FS(sub))))
+	// r.NoRoute(gin.WrapH(http.FileServer(http.Dir("internal/webui/static"))))
 
 	go r.Run(":" + strconv.Itoa(port))
 }

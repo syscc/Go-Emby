@@ -62,6 +62,8 @@ type Emby struct {
 	DlCacheTime string `yaml:"dl-cache-time"`
 	// DlCacheIgnore 直链缓存忽略域名 (支持通配符或关键字)
 	DlCacheIgnore []string `yaml:"dl-cache-ignore"`
+	// DlCacheIgnoreMode 直链缓存忽略模式 (blacklist: 黑名单, whitelist: 白名单)
+	DlCacheIgnoreMode string `yaml:"dl-cache-ignore-mode"`
 }
 
 func (e *Emby) Init() error {
@@ -106,6 +108,11 @@ func (e *Emby) Init() error {
 	if e.LocalMediaRoot = strings.TrimSpace(e.LocalMediaRoot); e.LocalMediaRoot == "" {
 		e.LocalMediaRoot = "/" + randoms.RandomHex(32)
 	}
+
+	if e.DlCacheIgnoreMode == "" {
+		e.DlCacheIgnoreMode = "blacklist"
+	}
+	e.DlCacheIgnoreMode = strings.ToLower(e.DlCacheIgnoreMode)
 
 	return nil
 }

@@ -366,6 +366,8 @@ func isCacheIgnored(u string) bool {
 	if parsed, err := url.Parse(u); err == nil {
 		domain = parsed.Hostname()
 	}
+
+	matched := false
 	for _, pattern := range config.C.Emby.DlCacheIgnore {
 		p := strings.TrimSpace(pattern)
 		if p == "" {
@@ -374,14 +376,23 @@ func isCacheIgnored(u string) bool {
 		// 关键字匹配：无通配符时按子串匹配（域名部分）
 		if !strings.ContainsAny(p, "*?") {
 			if strings.Contains(strings.ToLower(domain), strings.ToLower(p)) {
-				return true
+				matched = true
+				break
 			}
 			continue
 		}
 		// 通配符匹配：glob 到 hostname
 		if ok, _ := stdpath.Match(p, domain); ok {
-			return true
+			matched = true
+			break
 		}
 	}
-	return false
+
+	// 默认为 blacklist 模式
+	// blacklist: 命中规则 -> 忽略(true); 未命中 -> 不忽略(false)
+	// whitelist: 命中规则 -> 不忽略(false); 未命中 -> 忽略(true)
+	if config.C.Emby.DlCacheIgnoreMode == "whitelist" {
+		return !matched
+	}
+	return matched
 }

@@ -45,12 +45,13 @@ type EmbyServer struct {
 	LocalMediaRoot         string `json:"LocalMediaRoot"` // Emby 本地媒体根目录
 	OpenlistHost           string `json:"OpenlistHost"`
 	OpenlistToken          string `json:"OpenlistToken"`
-	InternalRedirectEnable bool   `json:"InternalRedirectEnable"`
-	DirectLinkCacheExpired string `json:"DirectLinkCacheExpired"`
-	DirectLinkCacheIgnore  string `json:"DirectLinkCacheIgnore"`
-	DisableProxy           bool   `json:"DisableProxy"` // If true, only serve as config holder, don't start proxy
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
+	InternalRedirectEnable    bool      `json:"InternalRedirectEnable"`
+	DirectLinkCacheExpired    string    `json:"DirectLinkCacheExpired"`
+	DirectLinkCacheIgnore     string    `json:"DirectLinkCacheIgnore"`
+	DirectLinkCacheIgnoreMode int       `json:"DirectLinkCacheIgnoreMode"` // 0: blacklist, 1: whitelist
+	DisableProxy              bool      `json:"DisableProxy"`              // If true, only serve as config holder, don't start proxy
+	CreatedAt                 time.Time
+	UpdatedAt                 time.Time
 }
 
 type GlobalConfig struct {

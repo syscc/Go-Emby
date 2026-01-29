@@ -69,6 +69,11 @@ func writeConfig(_ string, s db.EmbyServer) (string, error) {
 	if s.DirectLinkCacheIgnore != "" {
 		emby["dl-cache-ignore"] = splitMounts(s.DirectLinkCacheIgnore)
 	}
+	if s.DirectLinkCacheIgnoreMode == 1 {
+		emby["dl-cache-ignore-mode"] = "whitelist"
+	} else {
+		emby["dl-cache-ignore-mode"] = "blacklist"
+	}
 
 	// Strm Config
 	strm["internal-redirect-enable"] = s.InternalRedirectEnable

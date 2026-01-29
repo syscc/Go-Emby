@@ -306,7 +306,7 @@
         </div>
 
         <!-- Server Modal -->
-        <div id="server-modal" class="modal hidden">
+        <div id="server-modal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 id="modal-title" data-t="addServer">Add Server</h3>
@@ -368,15 +368,23 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label data-t="dlCacheIgnore">忽略缓存域名</label>
-                        <div class="subtitle" data-t="dlCacheIgnoreDesc">支持多个域名或通配符，每行一个，例如：*.115cdn.* 或关键字 115</div>
-                        <textarea id="server-dl-cache-ignore" style="min-height:80px" placeholder="cdnfhnfile.115cdn.net&#10;*.115cdn.*&#10;115"></textarea>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" id="server-internal-redirect">
-                        <label for="server-internal-redirect" data-t="internalRedirect">Enable Internal Redirect</label>
-                    </div>
+                            <label data-t="dlCacheIgnore">缓存过滤域名</label>
+                            <div class="subtitle" data-t="dlCacheIgnoreDesc">支持多个域名或通配符，每行一个，例如：*.115cdn.* 或关键字 115</div>
+                            <textarea id="server-dl-cache-ignore" style="min-height:50px" placeholder="cdnfhnfile.115cdn.net&#10;*.115cdn.*&#10;115"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label data-t="dlCacheMode">过滤模式</label>
+                            <select id="server-dl-cache-mode">
+                                <option value="0" data-t="dlCacheModeBlack">黑名单 (命中不缓存)</option>
+                                <option value="1" data-t="dlCacheModeWhite">白名单 (命中才缓存)</option>
+                            </select>
+                        </div>
                     <div class="modal-footer">
+                        <div class="form-check" style="margin: 0; background: none; padding: 0;">
+                            <input type="checkbox" id="server-internal-redirect">
+                            <label for="server-internal-redirect" data-t="internalRedirect">开启内部重定向</label>
+                        </div>
+                        <div style="flex-grow: 1;"></div>
                         <button type="button" class="btn btn-secondary" onclick="closeServerModal()"
                             data-t="cancel">Cancel</button>
                         <button type="submit" class="btn btn-primary" data-t="save">Save</button>

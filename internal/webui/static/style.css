@@ -467,10 +467,14 @@ button {
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 2000;
+}
+
+.modal.active {
+    display: flex;
 }
 
 .modal-content {
@@ -512,6 +516,26 @@ button {
     color: var(--text-muted);
 }
 
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 1.2rem;
+    background: var(--bg-input);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border-radius: 8px;
+    transition: var(--transition);
+    font-size: 0.95rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+}
+
 .form-check {
     margin-top: 1rem;
     background: rgba(255, 255, 255, 0.03);
@@ -547,15 +571,23 @@ button {
 
 .modal-footer {
     display: flex;
-    justify-content: flex-end;
+    align-items: center; /* 垂直居中对齐 */
+    justify-content: flex-end; /* 默认右对齐，但如果前面有元素会被推到右边 */
     gap: 12px;
     margin-top: 3rem;
     padding-top: 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* 专门针对 modal-footer 内的 form-check 样式覆盖 */
+.modal-footer .form-check {
+    margin-top: 0;
+    margin-right: auto; /* 将右侧所有元素推到最右边 */
+    background: none;
+    padding: 0;
+}
+
 /* Logs */
-.log-viewer {
     background: #151520;
     border-radius: var(--border-radius);
     height: 600px;

@@ -63,8 +63,11 @@ const translations = {
         localMediaRootDesc: "Files starting with this path will bypass proxy; Multiple paths supported, separate by , or ;",
         dlCacheValue: "Direct Link Cache",
         dlCacheUnit: "Unit",
-        dlCacheIgnore: "Ignore Cache Domains",
+        dlCacheIgnore: "Cache Filter Domains",
         dlCacheIgnoreDesc: "Support multiple domains or wildcards; one per line",
+        dlCacheMode: "Filter Mode",
+        dlCacheModeBlack: "Blacklist (Ignore matched)",
+        dlCacheModeWhite: "Whitelist (Cache matched only)",
         serverName: "Server Name",
         internalRedirect: "Enable Internal Redirect",
         disableProxy: "Disable Proxy (Config Only)",
@@ -146,8 +149,11 @@ const translations = {
         localMediaRootDesc: "以此路径开头的文件将绕过代理直连播放；支持多个路径，使用逗号或分号分隔",
         dlCacheValue: "直链缓存时间",
         dlCacheUnit: "单位",
-        dlCacheIgnore: "忽略缓存域名",
+        dlCacheIgnore: "缓存过滤域名",
         dlCacheIgnoreDesc: "支持多个域名或通配符（如 *.115cdn.*），也可填写关键字（如 115）；仅匹配域名部分；每行一个",
+        dlCacheMode: "过滤模式",
+        dlCacheModeBlack: "黑名单 (命中不缓存)",
+        dlCacheModeWhite: "白名单 (命中才缓存)",
         serverName: "服务器名称",
         internalRedirect: "开启内部重定向",
         disableProxy: "禁用代理 (仅保留配置)",
@@ -505,7 +511,7 @@ function renderServers() {
 function showServerModal(id = null) {
     const modal = document.getElementById('server-modal');
     const form = document.getElementById('server-form');
-    modal.classList.remove('hidden');
+    modal.classList.add('active'); // Use class to show modal
 
     if (id) {
         document.getElementById('modal-title').textContent = t('editServer');
@@ -525,19 +531,21 @@ function showServerModal(id = null) {
             document.getElementById('server-dl-cache-value').value = parseInt(dl) || 10;
             document.getElementById('server-dl-cache-unit').value = dl.replace(/\d+/,'') || 'm';
             document.getElementById('server-dl-cache-ignore').value = s.DirectLinkCacheIgnore || '';
+            document.getElementById('server-dl-cache-mode').value = s.DirectLinkCacheIgnoreMode || '0';
         }
     } else {
         document.getElementById('modal-title').textContent = t('addServer');
         form.reset();
         document.getElementById('server-id').value = '';
         document.getElementById('server-dl-cache-ignore').value = '';
+        document.getElementById('server-dl-cache-mode').value = '0';
         // Explicitly set checkboxes to false
         document.getElementById('server-internal-redirect').checked = false;
     }
 }
 
 function closeServerModal() {
-    document.getElementById('server-modal').classList.add('hidden');
+    document.getElementById('server-modal').classList.remove('active');
 }
 
 window.editServer = showServerModal;
@@ -562,6 +570,7 @@ document.getElementById('server-form').addEventListener('submit', async (e) => {
         InternalRedirectEnable: document.getElementById('server-internal-redirect').checked,
         DirectLinkCacheExpired: `${document.getElementById('server-dl-cache-value').value}${document.getElementById('server-dl-cache-unit').value}`,
         DirectLinkCacheIgnore: document.getElementById('server-dl-cache-ignore').value,
+        DirectLinkCacheIgnoreMode: parseInt(document.getElementById('server-dl-cache-mode').value || '0'),
         DisableProxy: false
     };
 
