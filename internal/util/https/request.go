@@ -148,6 +148,7 @@ func (r *RequestHolder) execute() (string, *http.Response, error) {
 		if !autoRedirect || !IsRedirectCode(resp.StatusCode) {
 			return url, resp, err
 		}
+		resp.Body.Close() // 关闭上一次请求的 body, 避免内存泄露
 		loc := resp.Header.Get("Location")
 		newBody := io.NopCloser(bytes.NewBuffer(bodyBytes))
 

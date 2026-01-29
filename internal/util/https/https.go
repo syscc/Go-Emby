@@ -32,6 +32,10 @@ func init() {
 			Dial: (&net.Dialer{Timeout: time.Minute}).Dial,
 			// 接收数据 5 分钟超时
 			ResponseHeaderTimeout: time.Minute * 5,
+			// 最大空闲连接数
+			MaxIdleConns: 100,
+			// 每个 host 最大空闲连接数
+			MaxIdleConnsPerHost: 100,
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse

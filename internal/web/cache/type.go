@@ -14,10 +14,18 @@ import (
 type respCacheWriter struct {
 	gin.ResponseWriter               // gin 原始的响应器
 	body               *bytes.Buffer // gin 回写响应时, 同步缓存
+	aborted            bool          // 是否中止缓存
 }
 
 func (rcw *respCacheWriter) Write(b []byte) (int, error) {
-	rcw.body.Write(b)
+	// 如果响应体过大 (> 5MB), 则停止缓存, 避免内存泄露
+	if !rcw.aborted && rcw.body.Len()+len(b) > 5*1024*1024 {
+		rcw.aborted = true
+		rcw.body.Reset() // 释放已占用的内存
+	}
+	if !rcw.aborted {
+		rcw.body.Write(b)
+	}
 	return rcw.ResponseWriter.Write(b)
 }
 

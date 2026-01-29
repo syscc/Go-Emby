@@ -148,7 +148,7 @@ func main() {
 		_ = os.MkdirAll(filepath.Join(*dr, "lib"), 0o755)
 
 		// Init DB
-		dbPath := filepath.Join(*dr, "Emby-Go.db")
+		dbPath := filepath.Join(*dr, "Go-Emby.db")
 		logs.Info("正在初始化数据库: %s", dbPath)
 		if err := db.Init(dbPath); err != nil {
 			log.Fatalf("Init DB failed: %v", err)

@@ -47,7 +47,21 @@ func delSpaceCache(space, spaceKey string) {
 	if strs.AnyEmpty(space, spaceKey) {
 		return
 	}
-	getSpace(space).Delete(spaceKey)
+	s := getSpace(space)
+	if s == nil {
+		return
+	}
+	s.Delete(spaceKey)
+
+	// 检查该空间是否为空, 为空则清理空间
+	empty := true
+	s.Range(func(key, value any) bool {
+		empty = false
+		return false
+	})
+	if empty {
+		spaceMap.Delete(space)
+	}
 }
 
 // getSpace 获取缓存空间

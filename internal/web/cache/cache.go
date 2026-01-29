@@ -53,13 +53,13 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 // 只有匹配上正则表达式的路由才会被缓存
 func CacheableRouteMarker() gin.HandlerFunc {
 	cacheablePatterns := []*regexp.Regexp{
-		regexp.MustCompile(constant.Reg_PlaybackInfo),
-		regexp.MustCompile(constant.Reg_VideoSubtitles),
+		// regexp.MustCompile(constant.Reg_PlaybackInfo),
+		// regexp.MustCompile(constant.Reg_VideoSubtitles),
 		regexp.MustCompile(constant.Reg_ResourceStream),
 		regexp.MustCompile(constant.Reg_ResourceOriginal), // 缓存 original 接口
-		regexp.MustCompile(constant.Reg_ItemDownload),
-		regexp.MustCompile(constant.Reg_ItemSyncDownload),
-		regexp.MustCompile(constant.Reg_UserItemsRandomWithLimit),
+		// regexp.MustCompile(constant.Reg_ItemDownload),
+		// regexp.MustCompile(constant.Reg_ItemSyncDownload),
+		// regexp.MustCompile(constant.Reg_UserItemsRandomWithLimit),
 	}
 
 	return func(c *gin.Context) {
@@ -119,6 +119,12 @@ func RequestCacher() gin.HandlerFunc {
 		}
 
 		// 7 刷新缓存
+		// 如果缓存被中止 (通常是因为响应体过大), 则跳过
+		if customWriter.aborted {
+			logs.Warn("响应体过大, 跳过缓存: %s", cacheKey)
+			return
+		}
+
 		header := c.Writer.Header()
 		// logs.Tip("RespHeader Expired: '%s'", header.Get(HeaderKeyExpired)) // 调试日志
 		respHeader := respHeader{
