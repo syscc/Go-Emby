@@ -609,8 +609,6 @@ button {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: var(--text-muted);
     font-weight: 600;
-    position: sticky;
-    top: 0;
 }
 
 #logs-table td {
