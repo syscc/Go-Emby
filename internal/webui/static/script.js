@@ -364,6 +364,7 @@ async function loadServers() {
         if (!res) return;
         servers = await res.json();
         renderServers();
+        updateLogServerFilterOptions();
     } catch (e) {
         console.error(e);
     }
@@ -620,29 +621,34 @@ window.deleteNotify = async (id) => {
 };
 
 // Logs
+function updateLogServerFilterOptions() {
+    const serverSelect = document.getElementById('log-server-filter');
+    if (!serverSelect) return;
+
+    const currentVal = serverSelect.value || 'all';
+
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.dataset.t = 'allServers';
+    allOption.textContent = t('allServers');
+
+    serverSelect.innerHTML = '';
+    serverSelect.appendChild(allOption);
+
+    (servers || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.Name;
+        opt.textContent = s.Name;
+        serverSelect.appendChild(opt);
+    });
+
+    const hasCurrent = Array.from(serverSelect.options).some(o => o.value === currentVal);
+    serverSelect.value = hasCurrent ? currentVal : 'all';
+}
+
 async function fetchLogs() {
     const filter = document.getElementById('log-filter').value;
     const serverFilter = document.getElementById('log-server-filter').value;
-    
-    // Update server list in filter if needed
-    const serverSelect = document.getElementById('log-server-filter');
-    // Keep the "all" option
-    const allOption = serverSelect.querySelector('option[value="all"]');
-    const currentVal = serverSelect.value;
-    
-    // Refresh options but keep selection
-    serverSelect.innerHTML = '';
-    serverSelect.appendChild(allOption);
-    
-    if (servers && servers.length > 0) {
-        servers.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.Name;
-            opt.textContent = s.Name;
-            serverSelect.appendChild(opt);
-        });
-    }
-    serverSelect.value = currentVal; // Restore selection
 
     const res = await fetchAuthenticated(`${API_BASE}/logs`);
     if (!res) return;

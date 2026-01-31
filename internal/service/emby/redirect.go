@@ -11,6 +11,7 @@ import (
 	"time"
 
 	stdpath "path"
+
 	"github.com/syscc/Emby-Go/internal/config"
 	"github.com/syscc/Emby-Go/internal/service/openlist"
 	"github.com/syscc/Emby-Go/internal/service/path"
@@ -366,6 +367,7 @@ func isCacheIgnored(u string) bool {
 	if parsed, err := url.Parse(u); err == nil {
 		domain = parsed.Hostname()
 	}
+	domainLower := strings.ToLower(domain)
 
 	matched := false
 	for _, pattern := range config.C.Emby.DlCacheIgnore {
@@ -375,14 +377,14 @@ func isCacheIgnored(u string) bool {
 		}
 		// 关键字匹配：无通配符时按子串匹配（域名部分）
 		if !strings.ContainsAny(p, "*?") {
-			if strings.Contains(strings.ToLower(domain), strings.ToLower(p)) {
+			if strings.Contains(domainLower, strings.ToLower(p)) {
 				matched = true
 				break
 			}
 			continue
 		}
 		// 通配符匹配：glob 到 hostname
-		if ok, _ := stdpath.Match(p, domain); ok {
+		if ok, _ := stdpath.Match(strings.ToLower(p), domainLower); ok {
 			matched = true
 			break
 		}

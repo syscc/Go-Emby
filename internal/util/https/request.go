@@ -126,7 +126,9 @@ func (r *RequestHolder) execute() (string, *http.Response, error) {
 		var bodyBytes []byte
 		if body != nil {
 			var err error
-			if bodyBytes, err = io.ReadAll(body); err != nil {
+			bodyBytes, err = io.ReadAll(body)
+			_ = body.Close()
+			if err != nil {
 				return "", nil, fmt.Errorf("读取请求体失败: %v", err)
 			}
 		}

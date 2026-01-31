@@ -1,7 +1,7 @@
 package constant
 
 const (
-	CurrentVersion = "v0.1.2" // Release v0.1.2
+	CurrentVersion = "v0.1.3" // Release v0.1.3
 	RepoAddr       = "https://github.com/syscc/Go-Emby"
 )
 

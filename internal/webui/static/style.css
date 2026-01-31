@@ -588,6 +588,7 @@ button {
 }
 
 /* Logs */
+.log-viewer {
     background: #151520;
     border-radius: var(--border-radius);
     height: 600px;
